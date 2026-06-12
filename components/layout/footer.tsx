@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { footerLinks, contactInfo } from "@/lib/data/navigation";
+import { BRAND } from "@/lib/brand";
 
 export function Footer() {
   return (
@@ -9,7 +10,12 @@ export function Footer() {
       <div className="gradient-blue">
         <div className="mx-auto max-w-7xl px-4 py-12 text-center text-white">
           <h2 className="text-2xl font-bold mb-2">Demande de devis</h2>
-          <p className="mb-6 text-white/80">Recevez la liste de prix personnalisée</p>
+          <p className="mb-2 text-white/80">Recevez la liste de prix personnalisée</p>
+          <p className="mb-6 text-white/70 text-sm">
+            <a href={`tel:${contactInfo.phones[0].replace(/\s/g, "")}`} className="hover:underline">{contactInfo.phones[0]}</a>
+            {" · "}
+            <a href={`mailto:${contactInfo.email}`} className="hover:underline">{contactInfo.email}</a>
+          </p>
           <Link
             href="/contact"
             className="inline-flex items-center rounded-full bg-white px-8 py-3 text-sm font-semibold text-google-blue transition-all hover:shadow-lg hover:scale-105"
@@ -26,10 +32,10 @@ export function Footer() {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-blue text-white font-bold">
                 K
               </div>
-              <span className="text-xl font-bold text-google-blue">Kurubis</span>
+              <span className="text-xl font-bold text-google-blue">{BRAND.name}</span>
             </div>
             <p className="text-sm text-muted leading-relaxed">
-              Fabrication et personnalisation de tenues de travail professionnelles en Tunisie.
+              {BRAND.tagline}. Fabrication et personnalisation de tenues professionnelles en Tunisie.
               Qualité, sécurité et confort pour chaque métier.
             </p>
           </div>
@@ -73,9 +79,9 @@ export function Footer() {
                 <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-google-blue" />
                 {contactInfo.address}
               </li>
-              {contactInfo.phones.slice(0, 2).map((phone) => (
+              {contactInfo.phones.map((phone) => (
                 <li key={phone}>
-                  <a href={`tel:${phone}`} className="flex items-center gap-2 text-sm text-muted hover:text-google-blue">
+                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="flex items-center gap-2 text-sm text-muted hover:text-google-blue">
                     <Phone className="h-4 w-4 text-google-blue" />
                     {phone}
                   </a>
@@ -92,7 +98,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted">
-          <p>&copy; {new Date().getFullYear()} Kurubis — Tenues de travail en Tunisie</p>
+          <p>&copy; {new Date().getFullYear()} {BRAND.copyright}</p>
           <div className="flex gap-4">
             {footerLinks.account.map((link) => (
               <Link key={link.href} href={link.href} className="hover:text-google-blue transition-colors">

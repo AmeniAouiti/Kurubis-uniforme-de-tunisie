@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { SiteShell } from "@/components/layout/site-shell";
 import { Providers } from "@/components/providers";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -11,9 +11,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Kurubis — Tenues de travail professionnelles",
+  title: `${BRAND.name} — Tenues de travail professionnelles`,
   description:
-    "Fabrication et personnalisation de vêtements de travail en Tunisie. Combinaisons, salopettes, EPI, haute visibilité et uniformes par métier.",
+    "Kurubis uniforme — Fabrication et personnalisation de vêtements de travail en Tunisie. Combinaisons, salopettes, EPI, haute visibilité et uniformes par métier.",
 };
 
 export default function RootLayout({
@@ -25,9 +25,7 @@ export default function RootLayout({
     <html lang="fr" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <Providers>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <SiteShell>{children}</SiteShell>
         </Providers>
       </body>
     </html>

@@ -1,9 +1,10 @@
 import type { Product } from "@/types";
+import { enrichProduct } from "@/lib/product-filters";
 
 const img = (id: number) =>
   `https://images.unsplash.com/photo-${id}?w=600&h=700&fit=crop&q=80`;
 
-export const products: Product[] = [
+const rawProducts: Product[] = [
   {
     id: "1",
     slug: "polo-manche-longue",
@@ -290,7 +291,102 @@ export const products: Product[] = [
     rating: 0,
     reviewCount: 0,
   },
+  {
+    id: "21",
+    slug: "bavette",
+    name: "Bavettes",
+    description: "Bavette professionnelle pour personnel médical et agroalimentaire. Protection hygiénique confortable, réutilisable et lavable.",
+    sku: "BAV001",
+    image: img(1582751363),
+    images: [img(1582751363), img(1576091160), img(1559839734), img(1618887170)],
+    categories: ["medicales"],
+    metiers: ["medicales", "cuisine"],
+    tags: ["COVID-19", "MÉDICALES / BIEN-ÊTRE", "AMBULANCIER"],
+    price: 12,
+    characteristics: [
+      "3 couches tissu anti-bactérien",
+      "Réutilisable, lavable à une température entre 60 et 120 degrés — même avec le javel ne perd pas ses caractéristiques ni ses couleurs",
+    ],
+    rating: 4,
+    reviewCount: 2,
+    reviews: [
+      { author: "Dr. Ben Ali", rating: 5, comment: "Excellente qualité, très résistant au lavage.", date: "Mai 2026" },
+      { author: "Clinique Nabeul", rating: 4, comment: "Bon rapport qualité/prix pour notre personnel.", date: "Avril 2026" },
+    ],
+  },
+  {
+    id: "22",
+    slug: "blouse-blanc",
+    name: "Blouse blanc",
+    description: "Blouse blanche professionnelle pour secteur médical et paramédical. Tissu résistant et facile d'entretien.",
+    sku: "BB001",
+    image: img(1576091160),
+    categories: ["medicales", "blouses"],
+    metiers: ["medicales"],
+    tags: ["MÉDICAL – PARAMÉDICAL", "MÉDICALES"],
+    isBestSeller: true,
+    rating: 4.6,
+    reviewCount: 14,
+  },
+  {
+    id: "23",
+    slug: "blouse-bugatti-bbu001",
+    name: "Blouse Bugatti BBU001",
+    description: "Blouse de travail Bugatti au design moderne. Confort et élégance pour professionnels de santé et bien-être.",
+    sku: "BBU001",
+    image: img(1559839734),
+    categories: ["medicales", "blouses"],
+    metiers: ["medicales"],
+    tags: ["BEAUTÉ – BIEN ÊTRE", "MÉDICALES"],
+    rating: 4.8,
+    reviewCount: 7,
+  },
+  {
+    id: "24",
+    slug: "surbottes-impermeables",
+    name: "Surbottes imperméables",
+    description: "Surbottes imperméables pour environnements médicaux et laboratoires.",
+    sku: "SUR001",
+    image: img(1582751363),
+    categories: ["medicales"],
+    metiers: ["medicales"],
+    tags: ["COVID-19", "MÉDICALES / BIEN-ÊTRE"],
+    price: 28,
+    rating: 4.2,
+    reviewCount: 3,
+  },
+  {
+    id: "25",
+    slug: "parka-haute-visibilite-noire-phv010u",
+    name: "Parka haute visibilité noire PHV010U",
+    description: "Parka haute visibilité noire avec bandes réfléchissantes conformes EN ISO 20471.",
+    sku: "PHV010U",
+    image: img(1544966484),
+    categories: ["parkas-haute-visibilite"],
+    metiers: ["btp-chantiers", "protection-civile"],
+    tags: ["AMBULANCIER", "BÂTIMENT", "HAUTE VISIBILITÉ"],
+    price: 185,
+    isBestSeller: true,
+    rating: 4.7,
+    reviewCount: 11,
+  },
+  {
+    id: "26",
+    slug: "surblouse-covid",
+    name: "Surblouse COVID",
+    description: "Surblouse de protection jetable/réutilisable pour environnements à risque biologique.",
+    sku: "SCV001",
+    image: img(1576091160),
+    categories: ["medicales"],
+    metiers: ["medicales"],
+    tags: ["COVID-19"],
+    price: 18,
+    rating: 4,
+    reviewCount: 5,
+  },
 ];
+
+export const products: Product[] = rawProducts.map(enrichProduct);
 
 export function getProductBySlug(slug: string) {
   return products.find((p) => p.slug === slug);

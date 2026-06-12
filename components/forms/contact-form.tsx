@@ -8,9 +8,27 @@ import { Send, CheckCircle } from "lucide-react";
 
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setLoading(true);
+    const form = new FormData(e.currentTarget);
+
+    await fetch("/api/quotes/landing", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clientName: form.get("name"),
+        clientEmail: form.get("email"),
+        phone: form.get("phone") || undefined,
+        subject: "Demande de devis — Contact",
+        message: form.get("message"),
+        items: [],
+      }),
+    });
+
+    setLoading(false);
     setSubmitted(true);
   }
 
@@ -20,7 +38,8 @@ export function ContactForm() {
         <CheckCircle className="h-12 w-12 text-google-blue mb-4" />
         <h3 className="text-xl font-bold">Message envoyé !</h3>
         <p className="mt-2 text-sm text-muted">
-          Nous vous répondrons dans les plus brefs délais.
+          Votre demande a été transmise par email à notre équipe. Pour suivre vos échanges en ligne,{" "}
+          <a href="/inscription" className="text-google-blue hover:underline">créez un compte</a>.
         </p>
       </div>
     );
@@ -46,16 +65,11 @@ export function ContactForm() {
         </div>
         <div>
           <label className="mb-1.5 block text-sm font-medium">Message</label>
-          <Textarea
-            name="message"
-            required
-            rows={5}
-            placeholder="Décrivez vos besoins en tenues de travail..."
-          />
+          <Textarea name="message" required rows={5} placeholder="Décrivez vos besoins..." />
         </div>
-        <Button type="submit" size="lg" className="w-full">
+        <Button type="submit" size="lg" className="w-full" disabled={loading}>
           <Send className="h-4 w-4" />
-          Envoyer la demande
+          {loading ? "Envoi..." : "Envoyer la demande"}
         </Button>
       </div>
     </form>

@@ -1,10 +1,12 @@
 import { PageHeader } from "@/components/layout/page-header";
 import { ContactForm } from "@/components/forms/contact-form";
+import { ContactMapSection } from "@/components/contact/contact-map-section";
 import { contactInfo } from "@/lib/data/navigation";
+import { BRAND } from "@/lib/brand";
 import { Mail, MapPin, Phone } from "lucide-react";
 
 export const metadata = {
-  title: "Contact — Kurubis",
+  title: `Contact — ${BRAND.name}`,
 };
 
 export default function ContactPage() {
@@ -66,6 +68,8 @@ export default function ContactPage() {
           </div>
           <ContactForm />
         </div>
+
+        <ContactMapSection />
       </div>
     </>
   );

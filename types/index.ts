@@ -25,6 +25,10 @@ export interface Product {
   rating: number;
   reviewCount: number;
   features?: string[];
+  price?: number;
+  filterSlugs?: string[];
+  characteristics?: string[];
+  reviews?: { author: string; rating: number; comment: string; date: string }[];
 }
 
 export interface NavItem {
@@ -48,11 +52,6 @@ export interface PersonalizationMethod {
   title: string;
   description: string;
   icon: string;
-}
-
-export interface ClientReference {
-  id: string;
-  name: string;
 }
 
 export interface Guide {

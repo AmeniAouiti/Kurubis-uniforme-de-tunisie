@@ -98,6 +98,15 @@ body {
   background: linear-gradient(135deg, #1a73e8 0%, #4285f4 50%, #669df6 100%);
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .gradient-mesh {
   background:
     radial-gradient(at 20% 30%, rgba(26, 115, 232, 0.15) 0%, transparent 50%),

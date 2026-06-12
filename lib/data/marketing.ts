@@ -1,4 +1,4 @@
-import type { HeroSlide, PersonalizationMethod, ClientReference, Guide, Service } from "@/types";
+import type { HeroSlide, PersonalizationMethod, Guide, Service } from "@/types";
 
 export const heroSlides: HeroSlide[] = [
   {
@@ -52,41 +52,6 @@ export const personalizationMethods: PersonalizationMethod[] = [
       "Marquage de 1 à 6 couleurs, grande résistance au lavage. Pas de dégradés. Certaines matières (polaire, tissu irrégulier) n'acceptent pas la sérigraphie.",
     icon: "Paintbrush",
   },
-];
-
-export const clientReferences: ClientReference[] = [
-  { id: "1", name: "GROUPE POLINA" },
-  { id: "2", name: "LE PROFESSIONNEL" },
-  { id: "3", name: "COG DISTRIBUTION" },
-  { id: "4", name: "RHEINMETALL" },
-  { id: "5", name: "MOTORSERVICE" },
-  { id: "6", name: "BF Germany" },
-  { id: "7", name: "BOSCH" },
-  { id: "8", name: "Decelect" },
-  { id: "9", name: "MPC PROKIM" },
-  { id: "10", name: "STBG / SFBT" },
-  { id: "11", name: "SKF" },
-  { id: "12", name: "BECKS" },
-  { id: "13", name: "ANOUAR MARKET" },
-  { id: "14", name: "BATTERIES ASSAD" },
-  { id: "15", name: "BEN YEDDER" },
-  { id: "16", name: "BOSCH" },
-  { id: "17", name: "Barista's Cafe" },
-  { id: "18", name: "La Gazelle" },
-  { id: "19", name: "Fial Engineering" },
-  { id: "20", name: "SACN" },
-  { id: "21", name: "Enda Tamweel" },
-  { id: "22", name: "AGR INDUSTRIE" },
-  { id: "23", name: "GAMCO ENERGY" },
-  { id: "24", name: "ATLAS" },
-  { id: "25", name: "OCEANA" },
-  { id: "26", name: "GROUPE BISMUTH" },
-  { id: "27", name: "SITAR" },
-  { id: "28", name: "CAT" },
-  { id: "29", name: "IVECO" },
-  { id: "30", name: "LINDE GAS" },
-  { id: "31", name: "STAROIL" },
-  { id: "32", name: "PROPLAST" },
 ];
 
 export const guides: Guide[] = [

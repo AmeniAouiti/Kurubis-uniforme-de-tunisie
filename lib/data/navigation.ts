@@ -68,7 +68,9 @@ export const footerLinks = {
 };
 
 export const contactInfo = {
-  phones: ["+216 72 363 322", "+216 98 300 590", "+216 99 848 304", "+216 98 625 541"],
-  email: "uniformeplus@gmail.com",
-  address: "Rue de la Paix Dar chaabene el fehri, Nabeul 8011",
+  phones: ["+216 24 553 769"],
+  email: "kurubis.uniforme@gmail.com",
+  address: "RUE SFAX KORBA NABEUL 8070",
+  coordinates: { lat: 36.7826, lng: 10.8576 },
+  mapLabel: "Kurubis uniforme",
 };

@@ -4,200 +4,190 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   Search,
-  ShoppingCart,
-  User,
+  ShoppingBag,
   Menu,
   X,
   Phone,
+  Mail,
   ChevronDown,
-  Heart,
+  List,
 } from "lucide-react";
-import { mainNavigation, contactInfo } from "@/lib/data/navigation";
+import { contactInfo } from "@/lib/data/navigation";
+import { BRAND } from "@/lib/brand";
+import { Logo } from "@/components/layout/logo";
+import { UserMenu } from "@/components/layout/user-menu";
+import { WishlistButton } from "@/components/layout/wishlist-button";
+import { VetementsMegaMenu } from "@/components/layout/mega-menu";
+import { MetiersSidebar } from "@/components/layout/metiers-sidebar";
 import { useCart } from "@/contexts/cart-context";
-import { useWishlist } from "@/contexts/wishlist-context";
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [megaOpen, setMegaOpen] = useState(false);
+  const [metiersOpen, setMetiersOpen] = useState(false);
   const { totalItems } = useCart();
-  const { items: wishlistItems } = useWishlist();
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="sticky top-0 z-50">
-      {/* Top bar */}
       <div className="gradient-blue text-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs">
-          <p className="hidden sm:block">
-            Bienvenue chez Kurubis — Fabrication des tenues de travail
-          </p>
-          <div className="flex items-center gap-4 ml-auto">
-            <a href={`tel:${contactInfo.phones[1]}`} className="flex items-center gap-1 hover:underline">
+          <p className="hidden sm:block">{BRAND.welcome}</p>
+          <div className="flex items-center gap-4 ml-auto flex-wrap justify-end">
+            <a href={`tel:${contactInfo.phones[0].replace(/\s/g, "")}`} className="flex items-center gap-1 hover:underline">
               <Phone className="h-3 w-3" />
-              {contactInfo.phones[1]}
+              {contactInfo.phones[0]}
             </a>
-            <Link href="/connexion" className="hover:underline">Connexion</Link>
-            <Link href="/inscription" className="hover:underline">Inscription</Link>
+            <a href={`mailto:${contactInfo.email}`} className="hidden sm:flex items-center gap-1 hover:underline">
+              <Mail className="h-3 w-3" />
+              {contactInfo.email}
+            </a>
+            {!isAuthenticated && (
+              <>
+                <Link href="/connexion" className="hover:underline hidden sm:inline">Connexion</Link>
+                <Link href="/inscription" className="hover:underline hidden sm:inline">Inscription</Link>
+              </>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Main header */}
       <div className="glass border-b border-border">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-blue text-white font-bold text-lg">
-              K
-            </div>
-            <div>
-              <span className="text-xl font-bold text-google-blue">Kurubis</span>
-              <span className="hidden sm:block text-[10px] text-muted -mt-1">Tenues de travail</span>
-            </div>
-          </Link>
+        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light lg:hidden"
+            aria-label="Menu"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
 
-          <form action="/recherche" className="hidden md:flex flex-1 max-w-xl mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+          <Logo />
+
+          <form action="/recherche" className="hidden md:flex flex-1 max-w-2xl">
+            <div className="relative flex w-full">
               <input
                 name="q"
                 type="search"
-                placeholder="Rechercher un produit, une catégorie..."
-                className="w-full rounded-full border border-border bg-white py-2.5 pl-11 pr-4 text-sm outline-none transition-all focus:border-google-blue focus:ring-2 focus:ring-google-blue-light"
+                placeholder="Rechercher un produit..."
+                className="w-full rounded-l-full border border-r-0 border-border bg-white py-2.5 pl-5 pr-4 text-sm outline-none transition-all focus:border-google-blue"
               />
+              <button
+                type="submit"
+                className="flex items-center justify-center rounded-r-full bg-google-blue px-5 text-white hover:bg-google-blue-dark transition-colors"
+              >
+                <Search className="h-4 w-4" />
+              </button>
             </div>
           </form>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/compte"
-              className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light transition-colors"
-              aria-label="Mon compte"
-            >
-              <User className="h-5 w-5 text-google-blue" />
-            </Link>
-            <Link
-              href="/compte"
-              className="relative hidden sm:flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light transition-colors"
-              aria-label="Favoris"
-            >
-              <Heart className="h-5 w-5 text-google-blue" />
-              {wishlistItems.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {wishlistItems.length}
-                </span>
-              )}
-            </Link>
+          <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+            <WishlistButton />
+            <UserMenu />
             <Link
               href="/panier"
-              className="relative flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light transition-colors"
-              aria-label="Panier devis"
+              className="relative flex items-center gap-2 rounded-full px-3 py-2 hover:bg-google-blue-light transition-colors"
+              aria-label="Citation devis"
             >
-              <ShoppingCart className="h-5 w-5 text-google-blue" />
+              <ShoppingBag className="h-5 w-5 text-google-blue" />
+              <span className="hidden sm:inline text-sm font-medium text-google-blue">Citation</span>
               {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-google-blue text-[10px] font-bold text-white">
+                <span className="absolute -top-0.5 right-0 sm:right-1 flex h-4 w-4 items-center justify-center rounded-full bg-google-blue text-[10px] font-bold text-white">
                   {totalItems}
                 </span>
               )}
             </Link>
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light lg:hidden"
-              aria-label="Menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
           </div>
         </div>
 
-        {/* Desktop nav */}
         <nav className="hidden lg:block border-t border-border/50">
-          <div className="mx-auto flex max-w-7xl items-center gap-1 px-4">
-            {mainNavigation.map((item) => (
-              <div
-                key={item.label}
-                className="relative"
-                onMouseEnter={() => setActiveMenu(item.label)}
-                onMouseLeave={() => setActiveMenu(null)}
-              >
-                <Link
-                  href={item.href || "#"}
-                  className="flex items-center gap-1 px-4 py-3 text-sm font-medium text-foreground hover:text-google-blue transition-colors"
-                >
-                  {item.label}
-                  {item.children && <ChevronDown className="h-3.5 w-3.5" />}
-                </Link>
+          <div className="mx-auto flex max-w-7xl items-center gap-2 px-4">
+            <button
+              onClick={() => setMetiersOpen(!metiersOpen)}
+              className={cn(
+                "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all",
+                metiersOpen ? "bg-google-blue-dark" : "gradient-blue hover:shadow-md"
+              )}
+            >
+              <List className="h-4 w-4" />
+              MÉTIERS
+            </button>
 
-                {item.children && activeMenu === item.label && (
-                  <div className="absolute left-0 top-full z-50 min-w-[280px] rounded-2xl border border-border bg-white p-4 shadow-xl shadow-google-blue/10">
-                    <div className="grid gap-1">
-                      {item.children.map((child) => (
-                        <div key={child.label}>
-                          {child.href ? (
-                            <Link
-                              href={child.href}
-                              className="block rounded-lg px-3 py-2 text-sm hover:bg-google-blue-light hover:text-google-blue transition-colors"
-                            >
-                              {child.label}
-                            </Link>
-                          ) : (
-                            <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-google-blue">
-                              {child.label}
-                            </p>
-                          )}
-                          {child.children && (
-                            <div className="ml-2 border-l-2 border-google-blue-light pl-2">
-                              {child.children.map((sub) => (
-                                <Link
-                                  key={sub.label}
-                                  href={sub.href || "#"}
-                                  className="block rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-google-blue-light hover:text-google-blue transition-colors"
-                                >
-                                  {sub.label}
-                                </Link>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+            <Link
+              href="/"
+              className="px-4 py-3 text-sm font-medium text-foreground hover:text-google-blue transition-colors"
+            >
+              ACCUEIL
+            </Link>
+
+            <div
+              className="relative"
+              onMouseEnter={() => setMegaOpen(true)}
+              onMouseLeave={() => setMegaOpen(false)}
+            >
+              <Link
+                href="/boutique"
+                className={cn(
+                  "flex items-center gap-1 px-4 py-3 text-sm font-medium transition-colors",
+                  megaOpen ? "text-google-blue" : "text-foreground hover:text-google-blue"
                 )}
-              </div>
-            ))}
+              >
+                VÊTEMENT DE TRAVAIL
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", megaOpen && "rotate-180")} />
+              </Link>
+              {megaOpen && <VetementsMegaMenu onClose={() => setMegaOpen(false)} />}
+            </div>
+
+            <Link
+              href="/contact"
+              className="px-4 py-3 text-sm font-medium text-foreground hover:text-google-blue transition-colors"
+            >
+              CONTACT
+            </Link>
           </div>
         </nav>
       </div>
 
-      {/* Mobile menu */}
+      {metiersOpen && (
+        <div className="hidden lg:block border-b border-border bg-surface">
+          <div className="mx-auto max-w-7xl px-4 py-4">
+            <MetiersSidebar />
+          </div>
+        </div>
+      )}
+
       <div
         className={cn(
-          "fixed inset-0 top-[120px] z-40 bg-white lg:hidden transition-transform duration-300 overflow-y-auto",
-          mobileOpen ? "translate-x-0" : "translate-x-full"
+          "fixed inset-0 top-[140px] z-40 bg-white lg:hidden transition-transform duration-300 overflow-y-auto",
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <nav className="p-4 space-y-2">
-          {mainNavigation.map((item) => (
-            <div key={item.label}>
-              <Link
-                href={item.href || "#"}
-                onClick={() => setMobileOpen(false)}
-                className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light"
-              >
-                {item.label}
-              </Link>
-              {item.children?.map((child) => (
-                <Link
-                  key={child.label}
-                  href={child.href || "#"}
-                  onClick={() => setMobileOpen(false)}
-                  className="block rounded-xl px-8 py-2 text-sm text-muted hover:bg-google-blue-light"
-                >
-                  {child.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+        <form action="/recherche" className="p-4 border-b border-border">
+          <div className="relative flex">
+            <input
+              name="q"
+              type="search"
+              placeholder="Rechercher un produit..."
+              className="w-full rounded-l-xl border border-r-0 border-border py-2.5 pl-4 text-sm outline-none"
+            />
+            <button type="submit" className="rounded-r-xl bg-google-blue px-4 text-white">
+              <Search className="h-4 w-4" />
+            </button>
+          </div>
+        </form>
+        <nav className="p-4 space-y-1">
+          <Link href="/" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Accueil</Link>
+          <Link href="/boutique" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Vêtement de travail</Link>
+          <Link href="/metiers" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Métiers</Link>
+          <Link href="/personnalisation" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Personnalisation</Link>
+          <Link href="/contact" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Contact</Link>
+          <Link href="/admin" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium text-google-blue hover:bg-google-blue-light">Administration</Link>
         </nav>
+        <div className="p-4">
+          <MetiersSidebar />
+        </div>
       </div>
     </header>
   );
