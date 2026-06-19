@@ -8,6 +8,9 @@ export function useSocket() {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
+    // Socket.io nécessite server.mjs (local) — indisponible sur Vercel serverless
+    if (process.env.NEXT_PUBLIC_VERCEL === "1") return;
+
     const s = io({
       path: "/api/socketio",
       addTrailingSlash: false,
