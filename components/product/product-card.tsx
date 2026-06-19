@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { CmsImage } from "@/components/ui/cms-image";
 import Link from "next/link";
 import { Heart, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-white transition-all duration-300 hover:border-google-blue/30 hover:shadow-xl hover:shadow-google-blue/10">
       <Link href={`/produits/${product.slug}`} className="relative aspect-[4/5] overflow-hidden bg-surface">
-        <Image
+        <CmsImage
           src={product.image}
           alt={product.name}
           fill

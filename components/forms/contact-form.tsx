@@ -9,13 +9,15 @@ import { Send, CheckCircle } from "lucide-react";
 export function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
+    setError("");
     const form = new FormData(e.currentTarget);
 
-    await fetch("/api/quotes/landing", {
+    const res = await fetch("/api/quotes/landing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -28,7 +30,14 @@ export function ContactForm() {
       }),
     });
 
+    const data = await res.json();
     setLoading(false);
+
+    if (!res.ok) {
+      setError(data.error || data.hint || "Erreur lors de l'envoi.");
+      return;
+    }
+
     setSubmitted(true);
   }
 
@@ -36,10 +45,12 @@ export function ContactForm() {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-google-blue-50 p-12 text-center">
         <CheckCircle className="h-12 w-12 text-google-blue mb-4" />
-        <h3 className="text-xl font-bold">Message envoyé !</h3>
-        <p className="mt-2 text-sm text-muted">
-          Votre demande a été transmise par email à notre équipe. Pour suivre vos échanges en ligne,{" "}
-          <a href="/inscription" className="text-google-blue hover:underline">créez un compte</a>.
+        <h3 className="text-xl font-bold">Demande envoyée !</h3>
+        <p className="mt-2 text-sm text-muted max-w-md">
+          Notre équipe a reçu votre demande. Vous serez notifié par email lors d&apos;une réponse.
+          Pour suivre la conversation en ligne,{" "}
+          <a href="/inscription" className="text-google-blue hover:underline font-medium">créez un compte</a>{" "}
+          avec la même adresse email.
         </p>
       </div>
     );
@@ -48,6 +59,11 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-8 shadow-sm">
       <h2 className="text-xl font-bold mb-6">Demande de devis</h2>
+      {error && (
+        <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>

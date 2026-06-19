@@ -3,6 +3,8 @@
 import { AccountSidebar } from "@/components/layout/account-sidebar";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { PasswordAlert } from "@/components/account/password-alert";
+import { UserNotificationBar } from "@/components/account/user-notification-bar";
+import { Logo } from "@/components/layout/logo";
 import { useAuth } from "@/contexts/auth-context";
 import Link from "next/link";
 
@@ -44,6 +46,13 @@ export function AccountShell({
 
   return (
     <div className="bg-surface min-h-[60vh]">
+      <div className="border-b border-border bg-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
+          <Logo href="/compte" compact />
+          <p className="text-xs font-medium text-muted hidden sm:block">Mon espace client</p>
+        </div>
+      </div>
+      <UserNotificationBar />
       <div className="border-b border-border bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4">
           <Breadcrumbs items={[{ label: breadcrumb }]} />

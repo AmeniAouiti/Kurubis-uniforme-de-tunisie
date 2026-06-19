@@ -24,20 +24,21 @@ export function BestSellersSection({ products }: { products: Product[] }) {
   }, [products, activeTab]);
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="mx-auto max-w-7xl px-4">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold uppercase tracking-wide border-b-2 border-google-blue pb-2 inline-block">
-              Meilleures ventes
-            </h2>
-            <p className="mt-2 text-sm text-muted">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-google-blue mb-2">
+              Sélection pro
+            </p>
+            <h2 className="text-2xl font-bold md:text-3xl tracking-tight">Meilleures ventes</h2>
+            <p className="mt-2 text-sm text-muted max-w-lg">
               Les références les plus commandées par nos clients professionnels
             </p>
           </div>
           <Link
             href="/boutique?filter=bestseller"
-            className="text-sm font-medium text-google-blue hover:underline"
+            className="text-sm font-medium text-google-blue hover:underline underline-offset-4 transition-all"
           >
             Voir tout →
           </Link>
@@ -49,9 +50,9 @@ export function BestSellersSection({ products }: { products: Product[] }) {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all",
+                "shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-all duration-300",
                 activeTab === tab.id
-                  ? "border-google-blue bg-google-blue text-white shadow-md shadow-google-blue/20"
+                  ? "border-google-blue bg-google-blue text-white shadow-md shadow-google-blue/25 scale-[1.02]"
                   : "border-border bg-white text-muted hover:border-google-blue/40 hover:text-google-blue"
               )}
             >
@@ -60,7 +61,9 @@ export function BestSellersSection({ products }: { products: Product[] }) {
           ))}
         </div>
 
-        <ProductCarousel products={filtered} />
+        <div key={activeTab} className="animate-fade-in-up">
+          <ProductCarousel products={filtered} />
+        </div>
       </div>
     </section>
   );

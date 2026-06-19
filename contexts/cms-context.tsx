@@ -6,136 +6,167 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import type { Product } from "@/types";
 import type { CatalogItem } from "@/lib/data/catalogs";
-import {
-  CMS_STORAGE_KEY,
-  getDefaultCmsData,
-  type CmsData,
-} from "@/lib/cms/defaults";
+import { getDefaultCmsData } from "@/lib/cms/defaults";
 import { enrichProduct } from "@/lib/product-filters";
+import { cacheGet, cacheSet, cacheGetSession, cacheInvalidate } from "@/lib/cache/memory";
+
+const CMS_CACHE_KEY = "cms-data";
+
+interface CmsData {
+  products: Product[];
+  catalogs: CatalogItem[];
+}
 
 interface CmsContextType {
   products: Product[];
   catalogs: CatalogItem[];
   hydrated: boolean;
-  addProduct: (product: Product) => void;
-  updateProduct: (id: string, product: Partial<Product>) => void;
-  deleteProduct: (id: string) => void;
-  addCatalog: (catalog: CatalogItem) => void;
-  updateCatalog: (id: string, catalog: Partial<CatalogItem>) => void;
-  deleteCatalog: (id: string) => void;
-  resetToDefaults: () => void;
+  loading: boolean;
+  refresh: () => Promise<void>;
+  addProduct: (product: Product) => Promise<void>;
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  addCatalog: (catalog: CatalogItem & { fileUrl?: string }) => Promise<void>;
+  updateCatalog: (id: string, catalog: Partial<CatalogItem> & { fileUrl?: string }) => Promise<void>;
+  deleteCatalog: (id: string) => Promise<void>;
   getProductBySlug: (slug: string) => Product | undefined;
   getProductById: (id: string) => Product | undefined;
 }
 
 const CmsContext = createContext<CmsContextType | undefined>(undefined);
 
-function loadCms(): CmsData {
-  if (typeof window === "undefined") return getDefaultCmsData();
-  try {
-    const stored = localStorage.getItem(CMS_STORAGE_KEY);
-    if (stored) return JSON.parse(stored) as CmsData;
-  } catch {
-    /* ignore */
-  }
+function getInitialData(): CmsData {
+  const mem = cacheGet<CmsData>(CMS_CACHE_KEY);
+  if (mem) return mem;
+  const session = cacheGetSession<CmsData>(CMS_CACHE_KEY);
+  if (session) return session;
   return getDefaultCmsData();
 }
 
-function enrichProducts(list: Product[]): Product[] {
-  return list.map((p) => enrichProduct({ ...p, filterSlugs: undefined }));
-}
-
 export function CmsProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<CmsData>(getDefaultCmsData);
-  const [hydrated, setHydrated] = useState(false);
+  const [data, setData] = useState<CmsData>(getInitialData);
+  const [hydrated, setHydrated] = useState(() => !!cacheGet<CmsData>(CMS_CACHE_KEY));
+  const [loading, setLoading] = useState(!cacheGet<CmsData>(CMS_CACHE_KEY));
+  const fetched = useRef(false);
 
-  useEffect(() => {
-    setData(loadCms());
-    setHydrated(true);
+  const applyData = useCallback((next: CmsData) => {
+    const enriched = {
+      ...next,
+      products: next.products.map((p) => enrichProduct(p)),
+    };
+    setData(enriched);
+    cacheSet(CMS_CACHE_KEY, enriched);
   }, []);
 
-  useEffect(() => {
-    if (hydrated) localStorage.setItem(CMS_STORAGE_KEY, JSON.stringify(data));
-  }, [data, hydrated]);
+  const refresh = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [pRes, cRes] = await Promise.all([
+        fetch("/api/products"),
+        fetch("/api/catalogs"),
+      ]);
+      const pJson = pRes.ok ? await pRes.json() : { products: data.products };
+      const cJson = cRes.ok ? await cRes.json() : { catalogs: data.catalogs };
+      applyData({
+        products: pJson.products || [],
+        catalogs: cJson.catalogs || [],
+      });
+    } catch {
+      /* garde le cache */
+    } finally {
+      setLoading(false);
+      setHydrated(true);
+    }
+  }, [applyData, data.products, data.catalogs]);
 
-  const persist = useCallback((updater: (prev: CmsData) => CmsData) => {
-    setData((prev) => {
-      const next = updater(prev);
-      return { ...next, products: enrichProducts(next.products) };
-    });
+  useEffect(() => {
+    if (fetched.current) return;
+    fetched.current = true;
+    const hasCache = !!cacheGet<CmsData>(CMS_CACHE_KEY) || !!cacheGetSession<CmsData>(CMS_CACHE_KEY);
+    void refresh(hasCache);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addProduct = useCallback(
-    (product: Product) => {
-      persist((prev) => ({
-        ...prev,
-        products: [...prev.products, enrichProduct(product)],
-      }));
+    async (product: Product) => {
+      const res = await fetch("/api/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
 
   const updateProduct = useCallback(
-    (id: string, updates: Partial<Product>) => {
-      persist((prev) => ({
-        ...prev,
-        products: prev.products.map((p) =>
-          p.id === id ? enrichProduct({ ...p, ...updates }) : p
-        ),
-      }));
+    async (id: string, updates: Partial<Product>) => {
+      const res = await fetch(`/api/products/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
 
   const deleteProduct = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        products: prev.products.filter((p) => p.id !== id),
-      }));
+    async (id: string) => {
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
 
   const addCatalog = useCallback(
-    (catalog: CatalogItem) => {
-      persist((prev) => ({
-        ...prev,
-        catalogs: [...prev.catalogs, catalog],
-      }));
+    async (catalog: CatalogItem & { fileUrl?: string }) => {
+      const res = await fetch("/api/catalogs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(catalog),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
 
   const updateCatalog = useCallback(
-    (id: string, updates: Partial<CatalogItem>) => {
-      persist((prev) => ({
-        ...prev,
-        catalogs: prev.catalogs.map((c) =>
-          c.id === id ? { ...c, ...updates } : c
-        ),
-      }));
+    async (id: string, updates: Partial<CatalogItem> & { fileUrl?: string }) => {
+      const res = await fetch(`/api/catalogs/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updates),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
 
   const deleteCatalog = useCallback(
-    (id: string) => {
-      persist((prev) => ({
-        ...prev,
-        catalogs: prev.catalogs.filter((c) => c.id !== id),
-      }));
+    async (id: string) => {
+      const res = await fetch(`/api/catalogs/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error((await res.json()).error);
+      cacheInvalidate(CMS_CACHE_KEY);
+      await refresh(true);
     },
-    [persist]
+    [refresh]
   );
-
-  const resetToDefaults = useCallback(() => {
-    setData(getDefaultCmsData());
-  }, []);
 
   const getProductBySlug = useCallback(
     (slug: string) => data.products.find((p) => p.slug === slug),
@@ -153,13 +184,14 @@ export function CmsProvider({ children }: { children: ReactNode }) {
         products: data.products,
         catalogs: data.catalogs,
         hydrated,
+        loading,
+        refresh,
         addProduct,
         updateProduct,
         deleteProduct,
         addCatalog,
         updateCatalog,
         deleteCatalog,
-        resetToDefaults,
         getProductBySlug,
         getProductById,
       }}

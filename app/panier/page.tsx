@@ -48,13 +48,18 @@ export default function PanierPage() {
       clearCart();
       router.push(data.conversationId ? `/compte/conversations?c=${data.conversationId}` : "/compte/conversations");
     } else {
-      await fetch("/api/quotes/landing", {
+      const res = await fetch("/api/quotes/landing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       clearCart();
-      router.push("/contact?sent=1");
+      if (res.ok) {
+        router.push("/contact?sent=1");
+      } else {
+        const data = await res.json();
+        alert(data.error || data.hint || "Erreur lors de l'envoi.");
+      }
     }
   }
 
@@ -92,8 +97,8 @@ export default function PanierPage() {
             <form onSubmit={handleSubmitQuote} className="rounded-2xl border border-border bg-white p-6 space-y-4">
               <p className="text-sm text-muted">
                 {isAuthenticated
-                  ? "La demande sera enregistrée dans votre messagerie et envoyée par email à Kurubis."
-                  : "Sans compte : envoi par email uniquement. Connectez-vous pour suivre la conversation en ligne."}
+                  ? "La demande ouvre un tunnel de conversation avec notre équipe et est aussi envoyée par email."
+                  : "Votre demande est enregistrée. Créez un compte avec le même email pour suivre les réponses en ligne."}
               </p>
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input name="name" required defaultValue={user ? `${user.firstName} ${user.lastName}` : ""} placeholder="Nom" />

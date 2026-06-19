@@ -22,7 +22,12 @@ export default function AdminCataloguesPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {catalogs.map((catalog) => (
+        {catalogs.length === 0 ? (
+          <p className="col-span-2 text-center text-sm text-muted py-12 rounded-2xl border border-border bg-white">
+            Aucun catalogue. Cliquez sur « Nouveau catalogue » pour commencer.
+          </p>
+        ) : (
+        catalogs.map((catalog) => (
           <article
             key={catalog.id}
             className="rounded-2xl border border-border bg-white overflow-hidden shadow-sm hover:border-google-blue/30 transition-colors"
@@ -52,7 +57,8 @@ export default function AdminCataloguesPage() {
               </div>
             </div>
           </article>
-        ))}
+        ))
+        )}
       </div>
     </AdminPage>
   );

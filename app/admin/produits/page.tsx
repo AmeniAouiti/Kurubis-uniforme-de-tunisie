@@ -35,7 +35,14 @@ export default function AdminProduitsPage() {
               </tr>
             </thead>
             <tbody>
-              {products.map((product) => (
+              {products.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted">
+                    Aucun article. Cliquez sur « Nouvel article » pour commencer.
+                  </td>
+                </tr>
+              ) : (
+              products.map((product) => (
                 <tr key={product.id} className="border-b border-border last:border-0 hover:bg-google-blue-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -68,7 +75,8 @@ export default function AdminProduitsPage() {
                     </Link>
                   </td>
                 </tr>
-              ))}
+              ))
+              )}
             </tbody>
           </table>
         </div>

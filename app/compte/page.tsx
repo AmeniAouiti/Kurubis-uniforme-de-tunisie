@@ -4,23 +4,35 @@ import Link from "next/link";
 import { AccountShell } from "@/components/account/account-shell";
 import { accountNavigation } from "@/lib/data/account-nav";
 import { useWishlist } from "@/contexts/wishlist-context";
+import { useConversations } from "@/hooks/use-conversations";
 import { Package, FileText, Heart } from "lucide-react";
 
 export default function CompteDashboardPage() {
   const { items: wishlistItems } = useWishlist();
+  const { conversations, loading } = useConversations();
+
+  const devisCount = conversations.filter((c) => c.type === "devis").length;
+  const pendingDevis = conversations.filter(
+    (c) => c.type === "devis" && (c.quoteStatus === "nouveau" || c.quoteStatus === "en_cours")
+  ).length;
+  const unread = conversations.filter((c) => c.unreadByClient).length;
 
   const quickStats = [
-    { icon: Package, label: "Commandes récentes", value: "3", href: "/compte/commandes" },
-    { icon: FileText, label: "Devis en cours", value: "1", href: "/compte/offres" },
+    { icon: Package, label: "Demandes de devis", value: loading ? "…" : String(devisCount), href: "/compte/commandes" },
+    { icon: FileText, label: "Devis en cours", value: loading ? "…" : String(pendingDevis), href: "/compte/offres" },
     { icon: Heart, label: "Favoris", value: String(wishlistItems.length), href: "/compte/listes-achat" },
   ];
 
   return (
     <AccountShell title="Mon compte" breadcrumb="Mon compte">
       <p className="text-sm text-muted leading-relaxed mb-8">
-        À partir du tableau de bord de votre compte, vous pouvez visualiser vos commandes récentes,
-        gérer vos adresses de livraison et de facturation ainsi que changer votre mot de passe
-        et les détails de votre compte.
+        À partir du tableau de bord de votre compte, vous pouvez visualiser vos demandes de devis,
+        échanger avec notre équipe via la messagerie et gérer vos favoris.
+        {unread > 0 && (
+          <span className="block mt-2 text-google-blue font-medium">
+            {unread} nouvelle(s) réponse(s) dans votre messagerie.
+          </span>
+        )}
       </p>
 
       <div className="grid gap-4 sm:grid-cols-3 mb-10">

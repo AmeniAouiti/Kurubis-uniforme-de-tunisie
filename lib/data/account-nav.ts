@@ -6,7 +6,6 @@ import {
   Tag,
   List,
   Package,
-  Users,
   Download,
   MapPin,
   UserCircle,
@@ -56,12 +55,6 @@ export const accountNavigation: AccountNavItem[] = [
     href: "/compte/commande-vrac",
     icon: Package,
     description: "Commandes groupées et volumes",
-  },
-  {
-    label: "Sous-comptes",
-    href: "/compte/sous-comptes",
-    icon: Users,
-    description: "Gestion des comptes entreprise",
   },
   {
     label: "Téléchargements",

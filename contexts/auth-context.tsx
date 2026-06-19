@@ -19,6 +19,8 @@ interface User {
   firstName: string;
   lastName: string;
   company?: string;
+  phone?: string;
+  avatarUrl?: string;
   role: UserRole;
 }
 
@@ -67,6 +69,8 @@ async function fetchProfile(supabaseUser: SupabaseUser): Promise<User | null> {
     firstName: data.first_name || "",
     lastName: data.last_name || "",
     company: data.company || undefined,
+    phone: data.phone || undefined,
+    avatarUrl: data.avatar_url || undefined,
     role: data.role as UserRole,
   };
 }
@@ -116,6 +120,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { user: authUser },
       } = await supabase.auth.getUser();
       if (!authUser) return { ok: false, error: "Session introuvable" };
+
+      // S'assurer que le profil existe côté serveur
+      await fetch("/api/profile/ensure", { method: "POST" }).catch(() => {});
 
       const profile = await fetchProfile(authUser);
       setUser(profile);

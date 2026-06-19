@@ -1,23 +1,29 @@
+import Image from "next/image";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { cn } from "@/lib/utils";
 
-export function Logo({ compact = false }: { compact?: boolean }) {
+const LOGO_SRC = "/images/logo-kurubis.png";
+
+export function Logo({ compact = false, href = "/" }: { compact?: boolean; href?: string }) {
   return (
-    <Link href="/" className="flex items-center gap-3 group">
-      <div className="relative flex h-12 w-12 items-center justify-center rounded-xl gradient-blue text-white font-bold text-xl shadow-lg shadow-google-blue/20 transition-transform group-hover:scale-105">
-        K
-        <span className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full bg-white border-2 border-google-blue" />
-      </div>
-      {!compact && (
-        <div className="leading-tight">
-          <span className="block text-lg font-bold text-google-blue tracking-tight">
-            {BRAND.name}
-          </span>
-          <span className="block text-[10px] font-medium text-muted uppercase tracking-wider">
-            {BRAND.tagline}
-          </span>
-        </div>
-      )}
+    <Link
+      href={href}
+      className="group flex shrink-0 items-center transition-opacity hover:opacity-90"
+      aria-label={`${BRAND.name} — Accueil`}
+    >
+      <Image
+        src={LOGO_SRC}
+        alt={BRAND.name}
+        width={compact ? 140 : 200}
+        height={compact ? 56 : 80}
+        className={cn(
+          "object-contain object-left transition-transform duration-300 group-hover:scale-[1.02]",
+          compact ? "h-auto max-h-12 w-auto" : "h-auto max-h-16 w-auto sm:max-h-20"
+        )}
+        style={{ width: "auto", height: "auto" }}
+        priority
+      />
     </Link>
   );
 }

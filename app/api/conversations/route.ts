@@ -1,27 +1,27 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { mapConversation } from "@/lib/db/map-conversation";
+import { getAuthUser, getDbAsync, getProfile } from "@/lib/supabase/db";
 
-async function loadConversationDetails(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ids: string[]
-) {
+async function loadConversationDetails(ids: string[]) {
   if (!ids.length) return [];
 
-  const { data: rows } = await supabase
+  const db = await getDbAsync();
+
+  const { data: rows, error } = await db
     .from("conversations")
     .select("*")
     .in("id", ids)
     .order("updated_at", { ascending: false });
 
+  if (error) throw new Error(error.message);
   if (!rows?.length) return [];
 
-  const { data: allItems } = await supabase
+  const { data: allItems } = await db
     .from("quote_items")
     .select("*")
     .in("conversation_id", ids);
 
-  const { data: allMsgs } = await supabase
+  const { data: allMsgs } = await db
     .from("conversation_messages")
     .select("*")
     .in("conversation_id", ids)
@@ -49,37 +49,52 @@ async function loadConversationDetails(
 }
 
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const user = await getAuthUser();
+    if (!user) {
+      return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    }
 
-  if (!user) {
-    return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+    const profile = await getProfile(user.id);
+    const db = await getDbAsync();
+    const isAdmin = profile?.role === "admin";
+
+    let query = db.from("conversations").select("id");
+
+    if (!isAdmin) {
+      const email = (profile?.email || user.email || "").toLowerCase();
+      query = query.or(`client_id.eq.${user.id},client_email.ilike.${email}`);
+    }
+
+    const { data: ids, error } = await query.order("updated_at", { ascending: false });
+
+    if (error) {
+      console.error("[conversations GET]", error);
+      const needsSetup = error.message?.includes("conversations");
+      return NextResponse.json(
+        {
+          error: error.message,
+          hint: needsSetup
+            ? "Exécutez supabase/setup-messaging.sql dans Supabase → SQL Editor → Run"
+            : "Vérifiez que schema.sql a été exécuté dans Supabase",
+        },
+        { status: 500 }
+      );
+    }
+
+    const conversations = await loadConversationDetails((ids || []).map((r) => r.id));
+    return NextResponse.json({ conversations });
+  } catch (e) {
+    console.error("[conversations GET]", e);
+    const msg = e instanceof Error ? e.message : String(e);
+    return NextResponse.json(
+      {
+        error: msg,
+        hint: msg.includes("SUPABASE_DB_PASSWORD") || msg.includes("DATABASE_URL")
+          ? "Ajoutez SUPABASE_DB_PASSWORD dans .env.local (Supabase → Settings → Database → mot de passe), puis redémarrez npm run dev"
+          : undefined,
+      },
+      { status: 500 }
+    );
   }
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, email")
-    .eq("id", user.id)
-    .single();
-
-  let query = supabase.from("conversations").select("id").eq("source", "account");
-
-  if (profile?.role !== "admin") {
-    query = query.or(`client_id.eq.${user.id},client_email.eq.${profile?.email || user.email}`);
-  }
-
-  const { data: ids, error } = await query.order("updated_at", { ascending: false });
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const conversations = await loadConversationDetails(
-    supabase,
-    (ids || []).map((r) => r.id)
-  );
-
-  return NextResponse.json({ conversations });
 }

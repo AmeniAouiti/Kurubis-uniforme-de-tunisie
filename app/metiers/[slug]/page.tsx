@@ -1,11 +1,11 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
-import { ProductGrid } from "@/components/product/product-grid";
-import { getMetierBySlug, metiers } from "@/lib/data/categories";
-import { getProductsByMetier } from "@/lib/data/products";
+import { MetierProducts } from "@/components/metiers/metier-products";
+import { getMetierConfig, metiersConfig } from "@/lib/data/metiers-config";
 
 export async function generateStaticParams() {
-  return metiers.map((m) => ({ slug: m.slug }));
+  return metiersConfig.map((m) => ({ slug: m.slug }));
 }
 
 export async function generateMetadata({
@@ -14,7 +14,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const metier = getMetierBySlug(slug);
+  const metier = getMetierConfig(slug);
   if (!metier) return { title: "Métier introuvable" };
   return { title: `Tenues ${metier.name} — Kurubis` };
 }
@@ -25,10 +25,8 @@ export default async function MetierPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const metier = getMetierBySlug(slug);
+  const metier = getMetierConfig(slug);
   if (!metier) notFound();
-
-  const metierProducts = getProductsByMetier(slug);
 
   return (
     <>
@@ -38,10 +36,9 @@ export default async function MetierPage({
         breadcrumb={`Accueil / Métiers / ${metier.name}`}
       />
       <div className="mx-auto max-w-7xl px-4 py-12">
-        <p className="mb-6 text-sm text-muted">
-          {metierProducts.length} produit{metierProducts.length > 1 ? "s" : ""} disponible{metierProducts.length > 1 ? "s" : ""}
-        </p>
-        <ProductGrid products={metierProducts} />
+        <Suspense fallback={<p className="text-sm text-muted py-8">Chargement...</p>}>
+          <MetierProducts metierSlug={slug} />
+        </Suspense>
       </div>
     </>
   );

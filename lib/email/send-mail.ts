@@ -36,8 +36,8 @@ export async function sendQuoteNotificationEmail(params: {
 
   const sourceLabel =
     params.source === "landing"
-      ? "Landing page (email uniquement)"
-      : "Espace client (email + plateforme)";
+      ? "Landing page (site public)"
+      : "Espace client connecté";
 
   const html = `
     <h2>Nouvelle demande de devis — Kurubis uniforme</h2>
@@ -66,6 +66,51 @@ export async function sendQuoteNotificationEmail(params: {
     return { ok: true };
   } catch (err) {
     console.error("[email]", err);
+    return { ok: false, error: String(err) };
+  }
+}
+
+export async function sendAdminReplyToClientEmail(params: {
+  clientEmail: string;
+  clientName: string;
+  subject: string;
+  replyBody: string;
+  conversationUrl?: string;
+}) {
+  if (!process.env.MAIL_USER || !process.env.MAIL_PASS) {
+    return { ok: false, error: "Mail non configuré" };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const link = params.conversationUrl || `${appUrl}/compte/conversations`;
+
+  const html = `
+    <h2>Réponse à votre demande — Kurubis uniforme</h2>
+    <p>Bonjour <strong>${params.clientName}</strong>,</p>
+    <p>Notre équipe a répondu à votre demande : <strong>${params.subject}</strong></p>
+    <div style="background:#f5f8ff;border-left:4px solid #1A73E8;padding:16px;margin:16px 0;border-radius:8px">
+      ${params.replyBody.replace(/\n/g, "<br>")}
+    </div>
+    <p>
+      <a href="${link}" style="display:inline-block;background:#1A73E8;color:white;padding:12px 24px;border-radius:999px;text-decoration:none;font-weight:600">
+        Voir la conversation
+      </a>
+    </p>
+    <p style="color:#666;font-size:12px;margin-top:24px">
+      Vous pouvez aussi répondre depuis votre espace client → Messagerie & devis.
+    </p>
+  `;
+
+  try {
+    await getTransporter().sendMail({
+      from: `"${process.env.MAIL_FROM_NAME || "Kurubis"}" <${process.env.MAIL_USER}>`,
+      to: params.clientEmail,
+      subject: `Réponse Kurubis — ${params.subject}`,
+      html,
+    });
+    return { ok: true };
+  } catch (err) {
+    console.error("[email reply]", err);
     return { ok: false, error: String(err) };
   }
 }

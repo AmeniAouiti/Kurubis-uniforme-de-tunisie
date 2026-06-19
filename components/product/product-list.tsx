@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { CmsImage } from "@/components/ui/cms-image";
 import Link from "next/link";
 import { Heart, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,7 @@ export function ProductList({ products }: { products: Product[] }) {
               href={`/produits/${product.slug}`}
               className="relative h-28 w-24 shrink-0 overflow-hidden rounded-xl bg-surface"
             >
-              <Image
+              <CmsImage
                 src={product.image}
                 alt={product.name}
                 fill

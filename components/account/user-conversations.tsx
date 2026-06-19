@@ -13,13 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/platform/format";
+import { StatusBadge } from "@/components/admin/status-badge";
 import { cn } from "@/lib/utils";
 
 export function UserConversations() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const { items: cartItems } = useCart();
-  const { conversations, loading, refresh } = useConversations();
+  const { conversations, loading, fetchError, refresh } = useConversations();
   const { socket } = useSocket();
 
   const [selectedId, setSelectedId] = useState("");
@@ -28,6 +29,7 @@ export function UserConversations() {
   const [newMessage, setNewMessage] = useState("");
   const [newSubject, setNewSubject] = useState("");
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   const selected = conversations.find((c) => c.id === selectedId);
 
@@ -98,11 +100,23 @@ export function UserConversations() {
 
     const data = await res.json();
     setSending(false);
+
+    if (!res.ok) {
+      const hint = data.hint || "";
+      setError(
+        data.error?.includes("conversations")
+          ? "Tables Supabase manquantes. Exécutez supabase/setup-messaging.sql dans Supabase SQL Editor."
+          : data.error || hint || "Erreur lors de l'envoi."
+      );
+      return;
+    }
+
+    setError("");
     setShowNewDevis(false);
     setNewMessage("");
     setNewSubject("");
     if (data.conversationId) setSelectedId(data.conversationId);
-    refresh();
+    await refresh();
   }
 
   if (loading) {
@@ -113,6 +127,22 @@ export function UserConversations() {
 
   return (
     <div className="space-y-4">
+      {fetchError && (
+        <div className="rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-900">
+          <p className="font-medium">Configuration base de données</p>
+          <p className="mt-1">{fetchError}</p>
+          <p className="mt-2 text-xs opacity-80">
+            Supabase → <strong>Connect</strong> → <strong>Session pooler</strong> → copiez l&apos;URI dans{" "}
+            <code className="bg-amber-100 px-1 rounded">DATABASE_URL</code> (.env.local), ou définissez{" "}
+            <code className="bg-amber-100 px-1 rounded">SUPABASE_DB_REGION</code> (ex. eu-west-1)
+          </p>
+        </div>
+      )}
+      {error && (
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted">
           {conversations.length} conversation(s)
@@ -144,7 +174,15 @@ export function UserConversations() {
                       {conv.type === "devis" ? <FileText className="h-4 w-4 text-google-blue mt-1" /> : <MessageSquare className="h-4 w-4 text-google-blue mt-1" />}
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-sm truncate">{conv.subject}</p>
-                        <p className="text-xs text-muted mt-1">{formatDate(conv.updatedAt)}</p>
+                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                          <p className="text-xs text-muted">{formatDate(conv.updatedAt)}</p>
+                          {conv.type === "devis" && (
+                            <StatusBadge status={conv.quoteStatus} className="scale-90 origin-left" />
+                          )}
+                          {conv.source === "landing" && (
+                            <span className="text-[10px] text-muted">Site public</span>
+                          )}
+                        </div>
                         {conv.unreadByClient && <span className="inline-block h-2 w-2 rounded-full bg-google-blue mt-1" />}
                       </div>
                     </div>
@@ -181,6 +219,12 @@ export function UserConversations() {
             <>
               <div className="p-5 border-b border-border">
                 <h3 className="font-semibold">{selected.subject}</h3>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  {selected.type === "devis" && <StatusBadge status={selected.quoteStatus} />}
+                  {selected.source === "landing" && (
+                    <span className="text-xs text-muted rounded-full border border-border px-2 py-0.5">Via site public</span>
+                  )}
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-5">
                 <ConversationThread conversation={selected} viewer="client" />

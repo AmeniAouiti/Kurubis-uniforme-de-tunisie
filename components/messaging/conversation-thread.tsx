@@ -21,6 +21,11 @@ export function ConversationThread({
             Demande de devis
           </span>
         )}
+        {conversation.source === "landing" && (
+          <span className="inline-flex items-center rounded-full bg-surface border border-border px-2.5 py-0.5 text-xs font-medium text-muted">
+            Site public
+          </span>
+        )}
         {conversation.type === "devis" && (
           <StatusBadge status={conversation.quoteStatus} />
         )}

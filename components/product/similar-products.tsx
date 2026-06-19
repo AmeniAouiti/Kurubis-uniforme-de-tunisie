@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { CmsImage } from "@/components/ui/cms-image";
 import { ChevronLeft, ChevronRight, ShoppingCart } from "lucide-react";
 import { useRef } from "react";
 import { useCart } from "@/contexts/cart-context";
@@ -60,7 +60,7 @@ export function SimilarProducts({ products }: { products: Product[] }) {
               </h3>
             </Link>
             <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-white border border-border mb-3">
-              <Image
+              <CmsImage
                 src={product.image}
                 alt={product.name}
                 fill

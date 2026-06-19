@@ -3,11 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/types";
+import {
+  encodeMetierSelectValue,
+  getMetierSelectOptions,
+  METIER_NONE,
+  parseMetierSelectValue,
+} from "@/lib/data/metiers-config";
+import { getVetementSelectOptions } from "@/lib/data/vetements-config";
+import { HierarchicalSelect } from "@/components/admin/hierarchical-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageUploadField } from "@/components/admin/image-upload";
 import { useCms } from "@/contexts/cms-context";
-import { slugify, generateId } from "@/lib/cms/utils";
+import { slugify } from "@/lib/cms/utils";
+import { parsePrice, formatProductPrice } from "@/lib/products-utils";
 import { Save, Trash2 } from "lucide-react";
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -15,43 +25,85 @@ export function ProductForm({ product }: { product?: Product }) {
   const { addProduct, updateProduct, deleteProduct } = useCms();
   const isEdit = !!product;
 
+  const initialMetier = product?.metiers[0] ?? METIER_NONE;
+  const initialCategory = product?.categories[0] ?? "";
+  const initialSubs = product?.metierSubcategories ?? [];
+
   const [name, setName] = useState(product?.name ?? "");
-  const [slug, setSlug] = useState(product?.slug ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [sku, setSku] = useState(product?.sku ?? "");
   const [image, setImage] = useState(product?.image ?? "");
-  const [categories, setCategories] = useState(product?.categories.join(", ") ?? "");
-  const [metiers, setMetiers] = useState(product?.metiers.join(", ") ?? "");
+  const [category, setCategory] = useState(initialCategory);
+  const [metier, setMetier] = useState(initialMetier);
+  const [metierSubs, setMetierSubs] = useState<string[]>(initialSubs);
+  const [metierSelectValue, setMetierSelectValue] = useState(() =>
+    encodeMetierSelectValue(initialMetier, initialSubs, initialCategory)
+  );
   const [tags, setTags] = useState(product?.tags.join(", ") ?? "");
-  const [price, setPrice] = useState(product?.price?.toString() ?? "");
-  const [isNew, setIsNew] = useState(product?.isNew ?? false);
+  const [price, setPrice] = useState(
+    product?.price != null ? formatProductPrice(product.price) : ""
+  );
+  const [isNew, setIsNew] = useState(product?.isNew ?? true);
   const [isBestSeller, setIsBestSeller] = useState(product?.isBestSeller ?? false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleNameChange(value: string) {
-    setName(value);
-    if (!isEdit || !slug) setSlug(slugify(value));
+  const metierOptions = getMetierSelectOptions();
+  const vetementOptions = getVetementSelectOptions().map((o) => ({
+    value: o.value,
+    label: o.label,
+    depth: o.depth,
+    selectable: !o.value.startsWith("__"),
+  }));
+
+  function handleMetierSelectChange(value: string) {
+    setMetierSelectValue(value);
+    const parsed = parseMetierSelectValue(value);
+    setMetier(parsed.metier);
+
+    if (parsed.subcategory) {
+      setMetierSubs([parsed.subcategory]);
+    } else {
+      setMetierSubs([]);
+    }
+
+    if (parsed.categoryFromMetier) {
+      setCategory(parsed.categoryFromMetier);
+    }
   }
 
   function parseList(value: string) {
-    return value
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return value.split(",").map((s) => s.trim()).filter(Boolean);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!image) {
+      setError("Veuillez uploader une image produit.");
+      return;
+    }
+
+    const hasMetier = metier && metier !== METIER_NONE;
+    if (!hasMetier && !category) {
+      setError("Choisissez au moins un métier ou une catégorie vêtement.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+
     const payload: Product = {
-      id: product?.id ?? generateId(),
+      id: product?.id ?? crypto.randomUUID(),
       name,
-      slug: slug || slugify(name),
+      slug: isEdit ? product!.slug : slugify(name),
       description,
       sku,
-      image: image || "https://images.unsplash.com/photo-1581092439?w=600&h=700&fit=crop&q=80",
-      categories: parseList(categories),
-      metiers: parseList(metiers),
+      image,
+      categories: category ? [category] : [],
+      metiers: hasMetier ? [metier] : [],
+      metierSubcategories: metierSubs,
       tags: parseList(tags),
-      price: price ? Number(price) : undefined,
+      price: parsePrice(price),
       isNew,
       isBestSeller,
       rating: product?.rating ?? 4,
@@ -60,29 +112,31 @@ export function ProductForm({ product }: { product?: Product }) {
       characteristics: product?.characteristics,
     };
 
-    if (isEdit) updateProduct(product.id, payload);
-    else addProduct(payload);
-
-    router.push("/admin/produits");
+    try {
+      if (isEdit) await updateProduct(product.id, payload);
+      else await addProduct(payload);
+      router.push("/admin/produits");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erreur enregistrement");
+      setSaving(false);
+    }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!product || !confirm("Supprimer cet article ?")) return;
-    deleteProduct(product.id);
+    await deleteProduct(product.id);
     router.push("/admin/produits");
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Nom du produit</label>
-          <Input value={name} onChange={(e) => handleNameChange(e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Slug (URL)</label>
-          <Input value={slug} onChange={(e) => setSlug(e.target.value)} required />
-        </div>
+      {error && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700">{error}</div>
+      )}
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Nom du produit</label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} required />
       </div>
 
       <div>
@@ -90,7 +144,7 @@ export function ProductForm({ product }: { product?: Product }) {
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} required />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="mb-1.5 block text-sm font-medium">Référence SKU</label>
           <Input value={sku} onChange={(e) => setSku(e.target.value)} required />
@@ -99,31 +153,46 @@ export function ProductForm({ product }: { product?: Product }) {
           <label className="mb-1.5 block text-sm font-medium">Prix (TND)</label>
           <Input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Image (URL)</label>
-          <Input value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://..." />
+          <label className="mb-1.5 block text-sm font-medium">Métier</label>
+          <HierarchicalSelect
+            options={metierOptions}
+            value={metierSelectValue}
+            onChange={handleMetierSelectChange}
+            placeholder="— Choisir un métier —"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Développez un métier avec la flèche, puis choisissez un sous-type. L&apos;article apparaît sur la page du métier.
+          </p>
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium">Catégorie vêtement de travail</label>
+          <HierarchicalSelect
+            options={vetementOptions}
+            value={category}
+            onChange={setCategory}
+            placeholder="— Choisir une catégorie —"
+          />
+          <p className="mt-1 text-xs text-muted">
+            Si métier et catégorie sont choisis, l&apos;article est visible dans les deux sections.
+          </p>
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Catégories (séparées par virgule)</label>
-          <Input value={categories} onChange={(e) => setCategories(e.target.value)} placeholder="combinaisons, polo" />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Métiers (slugs)</label>
-          <Input value={metiers} onChange={(e) => setMetiers(e.target.value)} placeholder="industrie, batiment" />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Tags</label>
-          <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="BTP, INDUSTRIE" />
-        </div>
+      <ImageUploadField label="Photo produit (Cloudinary)" value={image} onChange={setImage} />
+
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Tags</label>
+        <Input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="BTP, HAUTE VISIBILITÉ" />
       </div>
 
       <div className="flex flex-wrap gap-6">
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} className="rounded" />
-          Nouveauté
+          Afficher dans Nouveautés
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={isBestSeller} onChange={(e) => setIsBestSeller(e.target.checked)} className="rounded" />
@@ -132,17 +201,14 @@ export function ProductForm({ product }: { product?: Product }) {
       </div>
 
       <div className="flex flex-wrap gap-3 pt-2">
-        <Button type="submit">
+        <Button type="submit" disabled={saving}>
           <Save className="h-4 w-4" />
-          {isEdit ? "Enregistrer" : "Créer l'article"}
+          {saving ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer l'article"}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
-          Annuler
-        </Button>
+        <Button type="button" variant="outline" onClick={() => router.back()}>Annuler</Button>
         {isEdit && (
           <Button type="button" variant="outline" onClick={handleDelete} className="text-red-600 hover:text-red-700 ml-auto">
-            <Trash2 className="h-4 w-4" />
-            Supprimer
+            <Trash2 className="h-4 w-4" />Supprimer
           </Button>
         )}
       </div>

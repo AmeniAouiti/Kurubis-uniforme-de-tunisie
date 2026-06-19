@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { CmsImage } from "@/components/ui/cms-image";
 import { useState } from "react";
 import { ZoomIn } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,7 +26,7 @@ export function ProductGallery({
         )}
         onClick={() => setZoomed(!zoomed)}
       >
-        <Image
+        <CmsImage
           src={images[active]}
           alt={alt}
           fill
@@ -62,7 +62,7 @@ export function ProductGallery({
                 active === i ? "border-google-blue shadow-md" : "border-border hover:border-google-blue/50"
               )}
             >
-              <Image src={img} alt={`${alt} ${i + 1}`} fill className="object-cover" sizes="64px" />
+              <CmsImage src={img} alt={`${alt} ${i + 1}`} fill className="object-cover" sizes="64px" />
             </button>
           ))}
         </div>

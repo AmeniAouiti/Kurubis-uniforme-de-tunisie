@@ -19,6 +19,7 @@ export interface Product {
   images?: string[];
   categories: string[];
   metiers: string[];
+  metierSubcategories?: string[];
   tags: string[];
   isNew?: boolean;
   isBestSeller?: boolean;
@@ -45,6 +46,8 @@ export interface HeroSlide {
   href: string;
   gradient: string;
   icon: string;
+  image: string;
+  imageAlt: string;
 }
 
 export interface PersonalizationMethod {

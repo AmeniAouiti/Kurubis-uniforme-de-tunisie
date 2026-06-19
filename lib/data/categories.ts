@@ -1,4 +1,23 @@
 import type { Category } from "@/types";
+import { metiersConfig } from "@/lib/data/metiers-config";
+
+const METIER_ICONS: Record<string, string> = {
+  "protection-civile": "Shield",
+  petroliers: "Flame",
+  industrie: "Factory",
+  batiment: "Building2",
+  cuisine: "ChefHat",
+  medicales: "HeartPulse",
+  "btp-chantiers": "HardHat",
+  chaussures: "Footprints",
+  "uniforme-scolaire": "GraduationCap",
+  metal: "Wrench",
+  installateurs: "Plug",
+  automobile: "Car",
+  bois: "TreePine",
+  "espace-vert": "Leaf",
+  logistique: "Truck",
+};
 
 export const categories: Category[] = [
   { id: "1", slug: "combinaisons", name: "Combinaisons", description: "Combinaisons de travail professionnelles pour tous secteurs" },
@@ -20,21 +39,11 @@ export const categories: Category[] = [
   { id: "17", slug: "multirisque", name: "Multirisque", description: "Protection multirisques ATEX" },
 ];
 
-export const metiers = [
-  { slug: "protection-civile", name: "Protection civile", icon: "Shield" },
-  { slug: "petroliers", name: "Pétroliers", icon: "Flame" },
-  { slug: "industrie", name: "Industrie", icon: "Factory" },
-  { slug: "batiment", name: "Bâtiment", icon: "Building2" },
-  { slug: "cuisine", name: "Cuisine", icon: "ChefHat" },
-  { slug: "medicales", name: "Médicales / Bien-être", icon: "HeartPulse" },
-  { slug: "btp-chantiers", name: "BTP et chantiers", icon: "HardHat" },
-  { slug: "metal", name: "Industrie du métal", icon: "Wrench" },
-  { slug: "installateurs", name: "Installateurs", icon: "Plug" },
-  { slug: "automobile", name: "Automobile", icon: "Car" },
-  { slug: "bois", name: "Artisan du bois", icon: "TreePine" },
-  { slug: "espace-vert", name: "Espace vert", icon: "Leaf" },
-  { slug: "logistique", name: "Logistique et transport", icon: "Truck" },
-];
+export const metiers = metiersConfig.map((m) => ({
+  slug: m.slug,
+  name: m.name,
+  icon: METIER_ICONS[m.slug] ?? "Factory",
+}));
 
 export function getCategoryBySlug(slug: string) {
   return categories.find((c) => c.slug === slug);

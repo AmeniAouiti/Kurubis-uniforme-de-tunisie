@@ -1,7 +1,24 @@
 import type { Product } from "@/types";
 
+/** Évite 19.999… → arrondi au centime (ex. 20 reste 20) */
+export function parsePrice(value: string | number | null | undefined): number | undefined {
+  if (value === null || value === undefined || value === "") return undefined;
+  const raw =
+    typeof value === "number"
+      ? value
+      : parseFloat(String(value).replace(",", ".").trim());
+  if (!Number.isFinite(raw)) return undefined;
+  return Math.round(raw * 100) / 100;
+}
+
+export function formatProductPrice(value: number): string {
+  const rounded = Math.round(value * 100) / 100;
+  const fixed = rounded.toFixed(2);
+  return fixed.replace(/\.00$/, "").replace(/(\.\d)0$/, "$1");
+}
+
 export function getProductPrice(product: Product): number {
-  if (product.price !== undefined) return product.price;
+  if (product.price !== undefined) return parsePrice(product.price) ?? product.price;
   return 45 + (parseInt(product.id, 10) * 13) % 280;
 }
 

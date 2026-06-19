@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import {
   Search,
   ShoppingBag,
@@ -10,7 +11,6 @@ import {
   Phone,
   Mail,
   ChevronDown,
-  List,
 } from "lucide-react";
 import { contactInfo } from "@/lib/data/navigation";
 import { BRAND } from "@/lib/brand";
@@ -18,7 +18,7 @@ import { Logo } from "@/components/layout/logo";
 import { UserMenu } from "@/components/layout/user-menu";
 import { WishlistButton } from "@/components/layout/wishlist-button";
 import { VetementsMegaMenu } from "@/components/layout/mega-menu";
-import { MetiersSidebar } from "@/components/layout/metiers-sidebar";
+import { MetiersDropdown } from "@/components/layout/metiers-dropdown";
 import { useCart } from "@/contexts/cart-context";
 import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
@@ -26,102 +26,115 @@ import { cn } from "@/lib/utils";
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
-  const [metiersOpen, setMetiersOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [topBarVisible, setTopBarVisible] = useState(true);
   const { totalItems } = useCart();
   const { isAuthenticated } = useAuth();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 12);
+      setTopBarVisible(y < 80 || y < lastY);
+      lastY = y;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  const navLink = (href: string, label: string) => {
+    const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "nav-link px-3 py-2 text-[13px] font-semibold tracking-wide uppercase transition-colors",
+          active ? "text-google-blue" : "text-foreground/80 hover:text-google-blue"
+        )}
+        data-active={active}
+      >
+        {label}
+      </Link>
+    );
+  };
 
   return (
     <header className="sticky top-0 z-50">
-      <div className="gradient-blue text-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-xs">
-          <p className="hidden sm:block">{BRAND.welcome}</p>
+      <div
+        className={cn(
+          "overflow-hidden border-b border-white/10 bg-[#0d47a1] text-white transition-all duration-500",
+          topBarVisible ? "max-h-10 opacity-100" : "max-h-0 opacity-0 border-transparent"
+        )}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-[11px]">
+          <p className="hidden truncate sm:block text-white/90">{BRAND.welcome}</p>
           <div className="flex items-center gap-4 ml-auto flex-wrap justify-end">
-            <a href={`tel:${contactInfo.phones[0].replace(/\s/g, "")}`} className="flex items-center gap-1 hover:underline">
+            <a
+              href={`tel:${contactInfo.phones[0].replace(/\s/g, "")}`}
+              className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors"
+            >
               <Phone className="h-3 w-3" />
               {contactInfo.phones[0]}
             </a>
-            <a href={`mailto:${contactInfo.email}`} className="hidden sm:flex items-center gap-1 hover:underline">
+            <a
+              href={`mailto:${contactInfo.email}`}
+              className="hidden md:flex items-center gap-1.5 text-white/90 hover:text-white transition-colors"
+            >
               <Mail className="h-3 w-3" />
               {contactInfo.email}
             </a>
             {!isAuthenticated && (
               <>
-                <Link href="/connexion" className="hover:underline hidden sm:inline">Connexion</Link>
-                <Link href="/inscription" className="hover:underline hidden sm:inline">Inscription</Link>
+                <Link href="/connexion" className="hidden sm:inline text-white/90 hover:text-white transition-colors">
+                  Connexion
+                </Link>
+                <Link
+                  href="/inscription"
+                  className="hidden sm:inline rounded-full bg-white/15 px-2.5 py-0.5 hover:bg-white/25 transition-colors"
+                >
+                  Inscription
+                </Link>
               </>
             )}
           </div>
         </div>
       </div>
 
-      <div className="glass border-b border-border">
-        <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+      <div
+        className={cn(
+          "glass border-b border-border/60 transition-all duration-300",
+          scrolled && "header-scrolled"
+        )}
+      >
+        <div
+          className={cn(
+            "mx-auto flex max-w-7xl items-center gap-3 px-4 transition-all duration-300",
+            scrolled ? "py-2" : "py-3.5"
+          )}
+        >
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-google-blue-light lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 hover:bg-google-blue-light lg:hidden transition-colors"
             aria-label="Menu"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Logo />
+          <Logo compact={scrolled} />
 
-          <form action="/recherche" className="hidden md:flex flex-1 max-w-2xl">
-            <div className="relative flex w-full">
-              <input
-                name="q"
-                type="search"
-                placeholder="Rechercher un produit..."
-                className="w-full rounded-l-full border border-r-0 border-border bg-white py-2.5 pl-5 pr-4 text-sm outline-none transition-all focus:border-google-blue"
-              />
-              <button
-                type="submit"
-                className="flex items-center justify-center rounded-r-full bg-google-blue px-5 text-white hover:bg-google-blue-dark transition-colors"
-              >
-                <Search className="h-4 w-4" />
-              </button>
-            </div>
-          </form>
-
-          <div className="flex items-center gap-1 sm:gap-2 ml-auto">
-            <WishlistButton />
-            <UserMenu />
-            <Link
-              href="/panier"
-              className="relative flex items-center gap-2 rounded-full px-3 py-2 hover:bg-google-blue-light transition-colors"
-              aria-label="Citation devis"
-            >
-              <ShoppingBag className="h-5 w-5 text-google-blue" />
-              <span className="hidden sm:inline text-sm font-medium text-google-blue">Citation</span>
-              {totalItems > 0 && (
-                <span className="absolute -top-0.5 right-0 sm:right-1 flex h-4 w-4 items-center justify-center rounded-full bg-google-blue text-[10px] font-bold text-white">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-          </div>
-        </div>
-
-        <nav className="hidden lg:block border-t border-border/50">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 px-4">
-            <button
-              onClick={() => setMetiersOpen(!metiersOpen)}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-all",
-                metiersOpen ? "bg-google-blue-dark" : "gradient-blue hover:shadow-md"
-              )}
-            >
-              <List className="h-4 w-4" />
-              MÉTIERS
-            </button>
-
-            <Link
-              href="/"
-              className="px-4 py-3 text-sm font-medium text-foreground hover:text-google-blue transition-colors"
-            >
-              ACCUEIL
-            </Link>
-
+          <nav className="hidden lg:flex items-center gap-1 mx-4">
+            {navLink("/", "Accueil")}
+            <MetiersDropdown variant="nav" />
             <div
               className="relative"
               onMouseEnter={() => setMegaOpen(true)}
@@ -130,63 +143,94 @@ export function Header() {
               <Link
                 href="/boutique"
                 className={cn(
-                  "flex items-center gap-1 px-4 py-3 text-sm font-medium transition-colors",
-                  megaOpen ? "text-google-blue" : "text-foreground hover:text-google-blue"
+                  "nav-link flex items-center gap-1 px-3 py-2 text-[13px] font-semibold tracking-wide uppercase transition-colors",
+                  megaOpen || pathname.startsWith("/boutique") || pathname.startsWith("/categories")
+                    ? "text-google-blue"
+                    : "text-foreground/80 hover:text-google-blue"
                 )}
+                data-active={megaOpen || pathname.startsWith("/boutique")}
               >
-                VÊTEMENT DE TRAVAIL
-                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", megaOpen && "rotate-180")} />
+                Vêtements
+                <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-300", megaOpen && "rotate-180")} />
               </Link>
               {megaOpen && <VetementsMegaMenu onClose={() => setMegaOpen(false)} />}
             </div>
+            {navLink("/personnalisation", "Personnalisation")}
+            {navLink("/contact", "Contact")}
+          </nav>
 
+          <form action="/recherche" className="hidden md:flex flex-1 max-w-md ml-auto">
+            <div className="relative flex w-full group">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted pointer-events-none transition-colors group-focus-within:text-google-blue" />
+              <input
+                name="q"
+                type="search"
+                placeholder="Rechercher un produit..."
+                className="w-full rounded-full border border-border/80 bg-surface/80 py-2 pl-11 pr-4 text-sm outline-none transition-all focus:border-google-blue focus:bg-white focus:shadow-sm focus:shadow-google-blue/10"
+              />
+            </div>
+          </form>
+
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+            <WishlistButton />
+            <UserMenu />
             <Link
-              href="/contact"
-              className="px-4 py-3 text-sm font-medium text-foreground hover:text-google-blue transition-colors"
+              href="/panier"
+              className="relative flex h-10 items-center gap-2 rounded-xl px-2.5 sm:px-3 hover:bg-google-blue-light transition-all hover:scale-[1.02]"
+              aria-label="Citation devis"
             >
-              CONTACT
+              <ShoppingBag className="h-5 w-5 text-google-blue" />
+              <span className="hidden sm:inline text-sm font-medium text-google-blue">Devis</span>
+              {totalItems > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-google-blue px-1 text-[10px] font-bold text-white animate-fade-in-up">
+                  {totalItems}
+                </span>
+              )}
             </Link>
           </div>
-        </nav>
+        </div>
       </div>
 
-      {metiersOpen && (
-        <div className="hidden lg:block border-b border-border bg-surface">
-          <div className="mx-auto max-w-7xl px-4 py-4">
-            <MetiersSidebar />
-          </div>
-        </div>
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden animate-fade-in-up"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden
+        />
       )}
 
       <div
         className={cn(
-          "fixed inset-0 top-[140px] z-40 bg-white lg:hidden transition-transform duration-300 overflow-y-auto",
+          "fixed inset-y-0 left-0 z-50 w-[min(100%,320px)] bg-white shadow-2xl lg:hidden transition-transform duration-300 ease-out",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <form action="/recherche" className="p-4 border-b border-border">
-          <div className="relative flex">
-            <input
-              name="q"
-              type="search"
-              placeholder="Rechercher un produit..."
-              className="w-full rounded-l-xl border border-r-0 border-border py-2.5 pl-4 text-sm outline-none"
-            />
-            <button type="submit" className="rounded-r-xl bg-google-blue px-4 text-white">
-              <Search className="h-4 w-4" />
-            </button>
+        <div className="flex h-full flex-col overflow-y-auto">
+          <div className="border-b border-border p-4">
+            <Logo />
           </div>
-        </form>
-        <nav className="p-4 space-y-1">
-          <Link href="/" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Accueil</Link>
-          <Link href="/boutique" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Vêtement de travail</Link>
-          <Link href="/metiers" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Métiers</Link>
-          <Link href="/personnalisation" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Personnalisation</Link>
-          <Link href="/contact" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light">Contact</Link>
-          <Link href="/admin" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium text-google-blue hover:bg-google-blue-light">Administration</Link>
-        </nav>
-        <div className="p-4">
-          <MetiersSidebar />
+          <form action="/recherche" className="p-4 border-b border-border">
+            <div className="relative flex">
+              <input
+                name="q"
+                type="search"
+                placeholder="Rechercher..."
+                className="w-full rounded-xl border border-border py-2.5 pl-4 text-sm outline-none focus:border-google-blue"
+              />
+              <button type="submit" className="ml-2 rounded-xl bg-google-blue px-4 text-white">
+                <Search className="h-4 w-4" />
+              </button>
+            </div>
+          </form>
+          <nav className="flex-1 p-3 space-y-0.5">
+            <Link href="/" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light transition-colors">Accueil</Link>
+            <Link href="/boutique" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light transition-colors">Vêtements de travail</Link>
+            <Link href="/personnalisation" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light transition-colors">Personnalisation</Link>
+            <Link href="/contact" onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium hover:bg-google-blue-light transition-colors">Contact</Link>
+          </nav>
+          <div className="border-t border-border p-4">
+            <MetiersDropdown variant="button" onNavigate={() => setMobileOpen(false)} />
+          </div>
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { CmsImage } from "@/components/ui/cms-image";
 import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
@@ -34,7 +34,7 @@ export function ProductCardCompact({ product }: { product: Product }) {
         href={`/produits/${product.slug}`}
         className="relative mx-3 mt-3 aspect-square overflow-hidden rounded-xl bg-surface"
       >
-        <Image
+        <CmsImage
           src={product.image}
           alt={product.name}
           fill

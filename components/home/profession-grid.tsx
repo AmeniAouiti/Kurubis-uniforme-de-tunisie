@@ -13,6 +13,8 @@ import {
   TreePine,
   Leaf,
   Truck,
+  Footprints,
+  GraduationCap,
 } from "lucide-react";
 import { metiers } from "@/lib/data/categories";
 
@@ -30,6 +32,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   TreePine,
   Leaf,
   Truck,
+  Footprints,
+  GraduationCap,
 };
 
 export function ProfessionGrid() {

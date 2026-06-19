@@ -7,6 +7,7 @@ export interface CatalogItem {
   downloadSlug: string;
   href: string;
   fileName: string;
+  fileUrl?: string;
 }
 
 export const downloadableCatalogs: CatalogItem[] = [

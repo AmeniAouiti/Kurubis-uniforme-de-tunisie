@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { parse } from "node:url";
 import next from "next";
 import { Server } from "socket.io";
+import { runMigrations } from "./lib/db/migrate.mjs";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
@@ -10,7 +11,15 @@ const port = parseInt(process.env.PORT || "3000", 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
+  const dbResult = await runMigrations();
+  if (dbResult.ok) {
+    console.log("> Base de données : schéma synchronisé");
+  } else {
+    console.warn("> Base de données :", dbResult.error);
+    console.warn("> Ajoutez SUPABASE_DB_PASSWORD dans .env.local puis redémarrez");
+  }
+
   const httpServer = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
     handle(req, res, parsedUrl);

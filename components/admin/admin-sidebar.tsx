@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { adminNavigation, adminSiteLink } from "@/lib/data/admin-nav";
 import { useConversations } from "@/hooks/use-conversations";
 import { useAdminPreview } from "@/contexts/admin-preview-context";
+import { useAuth } from "@/contexts/auth-context";
 import { cn } from "@/lib/utils";
+import { LogOut } from "lucide-react";
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuth();
   const { unreadByAdmin: unreadConversationsCount, pendingQuotes: pendingQuotesCount } = useConversations();
   const { enterSitePreview } = useAdminPreview();
 
@@ -16,6 +20,11 @@ export function AdminSidebar() {
     "/admin/messagerie": unreadConversationsCount,
     "/admin/devis": pendingQuotesCount,
   };
+
+  async function handleLogout() {
+    await logout();
+    router.push("/connexion");
+  }
 
   return (
     <aside className="w-full xl:w-72 shrink-0">
@@ -62,6 +71,14 @@ export function AdminSidebar() {
             <adminSiteLink.icon className="h-4 w-4" />
             {adminSiteLink.label}
           </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="flex w-full items-center gap-3 px-5 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Déconnexion
+          </button>
         </nav>
       </div>
     </aside>

@@ -9,10 +9,13 @@ export function CatalogDownloads() {
   const { catalogs } = useCms();
 
   return (
-    <section className="py-16 bg-white">
+    <section className="py-20 bg-white">
       <div className="mx-auto max-w-7xl px-4">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold md:text-3xl">Nos catalogues</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-google-blue mb-2">
+            Documentation
+          </p>
+          <h2 className="text-2xl font-bold md:text-3xl tracking-tight">Nos catalogues</h2>
           <p className="mt-2 text-muted">
             Téléchargez nos catalogues PDF et découvrez toute notre gamme
           </p>
@@ -22,7 +25,7 @@ export function CatalogDownloads() {
           {catalogs.map((catalog) => (
             <article
               key={catalog.id}
-              className="group overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all hover:border-google-blue/30 hover:shadow-xl hover:shadow-google-blue/10"
+              className="group overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all duration-300 hover:border-google-blue/30 hover:shadow-xl hover:shadow-google-blue/10 hover:-translate-y-1"
             >
               <div className="relative h-48 overflow-hidden">
                 <Image
