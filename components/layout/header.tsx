@@ -27,19 +27,12 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [topBarVisible, setTopBarVisible] = useState(true);
   const { totalItems } = useCart();
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
   useEffect(() => {
-    let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 12);
-      setTopBarVisible(y < 80 || y < lastY);
-      lastY = y;
-    };
+    const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -70,13 +63,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50">
-      <div
-        className={cn(
-          "overflow-hidden border-b border-white/10 bg-[#0d47a1] text-white transition-all duration-500",
-          topBarVisible ? "max-h-10 opacity-100" : "max-h-0 opacity-0 border-transparent"
-        )}
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-2 text-[11px]">
+      <div className="border-b border-white/10 bg-[#0d47a1] text-white">
+        <div className="mx-auto flex h-10 max-w-7xl items-center justify-between px-4 text-[11px]">
           <p className="hidden truncate sm:block text-white/90">{BRAND.welcome}</p>
           <div className="flex items-center gap-4 ml-auto flex-wrap justify-end">
             <a
@@ -112,16 +100,11 @@ export function Header() {
 
       <div
         className={cn(
-          "glass border-b border-border/60 transition-all duration-300",
+          "glass border-b border-border/60",
           scrolled && "header-scrolled"
         )}
       >
-        <div
-          className={cn(
-            "mx-auto flex max-w-7xl items-center gap-3 px-4 transition-all duration-300",
-            scrolled ? "py-2" : "py-3.5"
-          )}
-        >
+        <div className="mx-auto flex h-[4.25rem] max-w-7xl items-center gap-3 px-4">
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-border/80 hover:bg-google-blue-light lg:hidden transition-colors"
@@ -130,7 +113,7 @@ export function Header() {
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
 
-          <Logo compact={scrolled} />
+          <Logo />
 
           <nav className="hidden lg:flex items-center gap-1 mx-4">
             {navLink("/", "Accueil")}

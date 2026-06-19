@@ -1,15 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Package,
-  BookOpen,
-  MessageSquare,
-  FileText,
-  Users,
-  ArrowRight,
-  Clock,
-} from "lucide-react";
+import { Package, MessageSquare, FileText, Users, ArrowRight, Clock } from "lucide-react";
 import { AdminPage } from "@/components/admin/admin-page";
 import { AdminStatCard } from "@/components/admin/admin-stat-card";
 import { StatusBadge } from "@/components/admin/status-badge";
@@ -18,7 +10,7 @@ import { useConversations } from "@/hooks/use-conversations";
 import { formatDate } from "@/lib/platform/format";
 
 export default function AdminDashboardPage() {
-  const { products, catalogs } = useCms();
+  const { products } = useCms();
   const { conversations, unreadByAdmin: unreadConversationsCount, pendingQuotes: pendingQuotesCount } = useConversations();
   const activeClientsCount = 0;
 
@@ -31,7 +23,7 @@ export default function AdminDashboardPage() {
       title="Tableau de bord"
       subtitle="Vue d'ensemble de votre plateforme Kurubis uniforme"
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 mb-8">
         <AdminStatCard
           label="Conversations"
           value={unreadConversationsCount}
@@ -60,13 +52,6 @@ export default function AdminDashboardPage() {
           value={products.length}
           icon={Package}
           href="/admin/produits"
-          accent="blue"
-        />
-        <AdminStatCard
-          label="Catalogues"
-          value={catalogs.length}
-          icon={BookOpen}
-          href="/admin/catalogues"
           accent="blue"
         />
       </div>

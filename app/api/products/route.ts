@@ -6,6 +6,10 @@ import type { Product } from "@/types";
 
 export async function GET() {
   try {
+    const user = await getAuthUser();
+    const profile = user ? await getProfile(user.id) : null;
+    const isAdmin = profile?.role === "admin";
+
     const db = await getDbAsync();
 
     const { data, error } = await db
@@ -15,7 +19,10 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    const products = (data || []).map((row) => enrichProduct(mapProductRow(row)));
+    let products = (data || []).map((row) => enrichProduct(mapProductRow(row)));
+    if (!isAdmin) {
+      products = products.filter((p) => p.isVisible !== false);
+    }
     return NextResponse.json({ products });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

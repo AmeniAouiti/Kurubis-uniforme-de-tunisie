@@ -1,5 +1,13 @@
 import type { Product } from "@/types";
 
+export function isProductVisible(product: Product): boolean {
+  return product.isVisible !== false;
+}
+
+export function filterVisibleProducts(products: Product[]): Product[] {
+  return products.filter(isProductVisible);
+}
+
 /** Évite 19.999… → arrondi au centime (ex. 20 reste 20) */
 export function parsePrice(value: string | number | null | undefined): number | undefined {
   if (value === null || value === undefined || value === "") return undefined;

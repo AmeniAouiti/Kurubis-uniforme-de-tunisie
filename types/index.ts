@@ -23,6 +23,7 @@ export interface Product {
   tags: string[];
   isNew?: boolean;
   isBestSeller?: boolean;
+  isVisible?: boolean;
   rating: number;
   reviewCount: number;
   features?: string[];

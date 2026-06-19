@@ -1,7 +1,6 @@
 import {
   LayoutDashboard,
   Package,
-  BookOpen,
   Settings,
   Store,
   MessageSquare,
@@ -15,7 +14,6 @@ export const adminNavigation = [
   { href: "/admin/devis", label: "Demandes de devis", icon: FileText },
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/produits", label: "Articles", icon: Package },
-  { href: "/admin/catalogues", label: "Catalogues", icon: BookOpen },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ] as const;
 

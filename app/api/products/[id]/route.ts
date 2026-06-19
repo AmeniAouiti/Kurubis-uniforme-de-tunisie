@@ -32,6 +32,7 @@ export async function PATCH(
   if (body.price !== undefined) updates.price = body.price ?? null;
   if (body.isNew != null) updates.is_new = body.isNew;
   if (body.isBestSeller != null) updates.is_best_seller = body.isBestSeller;
+  if (body.isVisible != null) updates.is_visible = body.isVisible;
   if (body.rating != null) updates.rating = body.rating;
   if (body.reviewCount != null) updates.review_count = body.reviewCount;
   if (body.features != null) updates.features = body.features;

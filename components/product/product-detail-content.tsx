@@ -13,8 +13,6 @@ import { useCms } from "@/contexts/cms-context";
 import {
   getProductBreadcrumbs,
   getProductImages,
-  getProductPrice,
-  formatProductPrice,
 } from "@/lib/products-utils";
 import { BRAND } from "@/lib/brand";
 import { Star, Mail, Phone } from "lucide-react";
@@ -44,7 +42,6 @@ export function ProductDetailContent({ slug }: { slug: string }) {
     .slice(0, 8);
 
   const images = getProductImages(product);
-  const price = getProductPrice(product);
 
   return (
     <div className="bg-white min-h-[60vh]">
@@ -95,9 +92,7 @@ export function ProductDetailContent({ slug }: { slug: string }) {
             )}
 
             <p className="mt-3 text-sm text-muted">SKU: {product.sku}</p>
-            <p className="mt-2 text-lg font-semibold text-google-blue">
-              Sur devis — à partir de {formatProductPrice(price)} د.ت
-            </p>
+            <p className="mt-2 text-lg font-semibold text-google-blue">Sur devis</p>
 
             <div className="mt-4 flex flex-wrap gap-2">
               {product.isNew && <Badge variant="new">Nouveau</Badge>}

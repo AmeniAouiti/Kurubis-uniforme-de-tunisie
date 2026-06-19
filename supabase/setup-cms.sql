@@ -41,8 +41,10 @@ CREATE INDEX IF NOT EXISTS idx_products_categories ON public.products USING gin(
 CREATE INDEX IF NOT EXISTS idx_catalogs_slug ON public.catalogs(download_slug);
 
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS metier_subcategories text[] NOT NULL DEFAULT '{}';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_visible boolean NOT NULL DEFAULT true;
 CREATE INDEX IF NOT EXISTS idx_products_metiers ON public.products USING gin(metiers);
 CREATE INDEX IF NOT EXISTS idx_products_metier_subcategories ON public.products USING gin(metier_subcategories);
+CREATE INDEX IF NOT EXISTS idx_products_is_visible ON public.products(is_visible);
 
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.catalogs ENABLE ROW LEVEL SECURITY;

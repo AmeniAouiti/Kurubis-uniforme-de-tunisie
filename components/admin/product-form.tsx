@@ -3,21 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product } from "@/types";
-import {
-  encodeMetierSelectValue,
-  getMetierSelectOptions,
-  METIER_NONE,
-  parseMetierSelectValue,
-} from "@/lib/data/metiers-config";
-import { getVetementSelectOptions } from "@/lib/data/vetements-config";
-import { HierarchicalSelect } from "@/components/admin/hierarchical-select";
+import { CategoryMultiSelect } from "@/components/admin/category-multi-select";
+import { MetierMultiSelect } from "@/components/admin/metier-multi-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageUploadField } from "@/components/admin/image-upload";
 import { useCms } from "@/contexts/cms-context";
 import { slugify } from "@/lib/cms/utils";
-import { parsePrice, formatProductPrice } from "@/lib/products-utils";
 import { Save, Trash2 } from "lucide-react";
 
 export function ProductForm({ product }: { product?: Product }) {
@@ -25,52 +18,18 @@ export function ProductForm({ product }: { product?: Product }) {
   const { addProduct, updateProduct, deleteProduct } = useCms();
   const isEdit = !!product;
 
-  const initialMetier = product?.metiers[0] ?? METIER_NONE;
-  const initialCategory = product?.categories[0] ?? "";
-  const initialSubs = product?.metierSubcategories ?? [];
-
   const [name, setName] = useState(product?.name ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [sku, setSku] = useState(product?.sku ?? "");
   const [image, setImage] = useState(product?.image ?? "");
-  const [category, setCategory] = useState(initialCategory);
-  const [metier, setMetier] = useState(initialMetier);
-  const [metierSubs, setMetierSubs] = useState<string[]>(initialSubs);
-  const [metierSelectValue, setMetierSelectValue] = useState(() =>
-    encodeMetierSelectValue(initialMetier, initialSubs, initialCategory)
-  );
+  const [categories, setCategories] = useState<string[]>(product?.categories ?? []);
+  const [metiers, setMetiers] = useState<string[]>(product?.metiers ?? []);
+  const [metierSubs, setMetierSubs] = useState<string[]>(product?.metierSubcategories ?? []);
   const [tags, setTags] = useState(product?.tags.join(", ") ?? "");
-  const [price, setPrice] = useState(
-    product?.price != null ? formatProductPrice(product.price) : ""
-  );
   const [isNew, setIsNew] = useState(product?.isNew ?? true);
   const [isBestSeller, setIsBestSeller] = useState(product?.isBestSeller ?? false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const metierOptions = getMetierSelectOptions();
-  const vetementOptions = getVetementSelectOptions().map((o) => ({
-    value: o.value,
-    label: o.label,
-    depth: o.depth,
-    selectable: !o.value.startsWith("__"),
-  }));
-
-  function handleMetierSelectChange(value: string) {
-    setMetierSelectValue(value);
-    const parsed = parseMetierSelectValue(value);
-    setMetier(parsed.metier);
-
-    if (parsed.subcategory) {
-      setMetierSubs([parsed.subcategory]);
-    } else {
-      setMetierSubs([]);
-    }
-
-    if (parsed.categoryFromMetier) {
-      setCategory(parsed.categoryFromMetier);
-    }
-  }
 
   function parseList(value: string) {
     return value.split(",").map((s) => s.trim()).filter(Boolean);
@@ -83,8 +42,7 @@ export function ProductForm({ product }: { product?: Product }) {
       return;
     }
 
-    const hasMetier = metier && metier !== METIER_NONE;
-    if (!hasMetier && !category) {
+    if (metiers.length === 0 && categories.length === 0) {
       setError("Choisissez au moins un métier ou une catégorie vêtement.");
       return;
     }
@@ -99,13 +57,13 @@ export function ProductForm({ product }: { product?: Product }) {
       description,
       sku,
       image,
-      categories: category ? [category] : [],
-      metiers: hasMetier ? [metier] : [],
+      categories,
+      metiers,
       metierSubcategories: metierSubs,
       tags: parseList(tags),
-      price: parsePrice(price),
       isNew,
       isBestSeller,
+      isVisible: product?.isVisible !== false,
       rating: product?.rating ?? 4,
       reviewCount: product?.reviewCount ?? 0,
       features: product?.features,
@@ -144,40 +102,31 @@ export function ProductForm({ product }: { product?: Product }) {
         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} required />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Référence SKU</label>
-          <Input value={sku} onChange={(e) => setSku(e.target.value)} required />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-sm font-medium">Prix (TND)</label>
-          <Input type="number" min="0" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
-        </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Référence SKU</label>
+        <Input value={sku} onChange={(e) => setSku(e.target.value)} required />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Métier</label>
-          <HierarchicalSelect
-            options={metierOptions}
-            value={metierSelectValue}
-            onChange={handleMetierSelectChange}
-            placeholder="— Choisir un métier —"
+          <label className="mb-1.5 block text-sm font-medium">Métiers</label>
+          <MetierMultiSelect
+            metiers={metiers}
+            metierSubcategories={metierSubs}
+            categories={categories}
+            onMetiersChange={setMetiers}
+            onMetierSubsChange={setMetierSubs}
+            onCategoriesChange={setCategories}
           />
           <p className="mt-1 text-xs text-muted">
-            Développez un métier avec la flèche, puis choisissez un sous-type. L&apos;article apparaît sur la page du métier.
+            Plusieurs métiers possibles. L&apos;article apparaît sur chaque page métier choisie.
           </p>
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium">Catégorie vêtement de travail</label>
-          <HierarchicalSelect
-            options={vetementOptions}
-            value={category}
-            onChange={setCategory}
-            placeholder="— Choisir une catégorie —"
-          />
+          <label className="mb-1.5 block text-sm font-medium">Catégories vêtement</label>
+          <CategoryMultiSelect value={categories} onChange={setCategories} />
           <p className="mt-1 text-xs text-muted">
-            Si métier et catégorie sont choisis, l&apos;article est visible dans les deux sections.
+            Plusieurs catégories possibles. L&apos;article apparaît dans chaque catégorie choisie.
           </p>
         </div>
       </div>

@@ -3,15 +3,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import {
   shopFilterTree,
   countForFilter,
-  PRICE_MAX,
   type ShopFilterNode,
 } from "@/lib/data/shop-filters";
-import { getNewProducts } from "@/lib/data/products";
 import type { Product } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -104,23 +101,7 @@ export function ShopSidebar({
   products: Product[];
   activeFilter?: string;
 }) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [minPrice, setMinPrice] = useState(
-    Number(searchParams.get("prixMin") || 0)
-  );
-  const [maxPrice, setMaxPrice] = useState(
-    Number(searchParams.get("prixMax") || PRICE_MAX)
-  );
-
-  const newProducts = getNewProducts().slice(0, 4);
-
-  function applyPriceFilter() {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("prixMin", String(minPrice));
-    params.set("prixMax", String(maxPrice));
-    router.push(`/boutique?${params.toString()}`);
-  }
+  const newProducts = products.filter((p) => p.isNew).slice(0, 4);
 
   return (
     <aside className="w-full lg:w-72 shrink-0 space-y-6">
@@ -141,31 +122,6 @@ export function ShopSidebar({
             activeSlug={activeFilter}
           />
         ))}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
-        <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-foreground">
-          Prix
-        </h3>
-        <div className="space-y-3">
-          <input
-            type="range"
-            min={0}
-            max={PRICE_MAX}
-            value={maxPrice}
-            onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full accent-google-blue"
-          />
-          <p className="text-sm text-muted">
-            Prix : {minPrice} د.ت — {maxPrice} د.ت
-          </p>
-          <button
-            onClick={applyPriceFilter}
-            className="w-full rounded-lg bg-google-blue px-4 py-2 text-sm font-medium text-white hover:bg-google-blue-dark transition-colors"
-          >
-            Filtrer
-          </button>
-        </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
