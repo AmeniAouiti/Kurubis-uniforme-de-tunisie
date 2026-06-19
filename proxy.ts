@@ -23,7 +23,12 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch {
+    // Réseau indisponible ou Supabase injoignable — on laisse passer la requête
+  }
+
   return supabaseResponse;
 }
 
